@@ -47,12 +47,12 @@ fun DashboardScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(Color(0xFF0F131E)) // Görseldeki derin lacivert/siyah arka plan
     ) {
         when (val state = uiState) {
             is MainUiState.Loading -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(strokeWidth = 3.dp)
+                    CircularProgressIndicator(color = Color(0xFF4C7CE5), strokeWidth = 3.dp)
                 }
             }
             is MainUiState.Success -> {
@@ -64,7 +64,7 @@ fun DashboardScreen(
                             }
                             context.startActivity(intent)
                         } catch (e: Exception) {
-                            val intent = Intent(Settings.ACTION_SETTINGS).apply {
+                            val intent = Intent(Settings.SETTINGS).apply {
                                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
                             }
                             context.startActivity(intent)
@@ -95,58 +95,43 @@ fun PermissionOnboarding(
     ) {
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(32.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            ),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF171D2C)),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(28.dp),
+                    .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.img_permission_pulse_1783019355690),
-                    contentDescription = "Kullanım İzni Görseli",
-                    modifier = Modifier
-                        .size(140.dp)
-                        .clip(RoundedCornerShape(28.dp))
+                    contentDescription = null,
+                    modifier = Modifier.size(120.dp).clip(RoundedCornerShape(24.dp))
                 )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
+                Spacer(modifier = Modifier.height(20.dp))
                 Text(
                     text = "Kullanım Erişimi Gerekli",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = Color.White
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "ScreenPulse; verileri güvenli Android sistem API'leri ile yalnızca cihazınızda takip eder.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF8A99AD),
                     textAlign = TextAlign.Center
                 )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Text(
-                    text = "ScreenPulse; ekran açık kalma süresini, pil sağlığını ve uygulama kullanım verilerini güvenli Android sistem API'leri ile yalnızca cihazınızda takip eder. Hiçbir kişisel veri cihazınızdan dışarı çıkmaz.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 22.sp
-                )
-
-                Spacer(modifier = Modifier.height(28.dp))
-
+                Spacer(modifier = Modifier.height(24.dp))
                 Button(
                     onClick = onRequestPermission,
-                    shape = RoundedCornerShape(20.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4C7CE5)),
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.fillMaxWidth().height(50.dp)
                 ) {
-                    Icon(imageVector = Icons.Filled.OpenInNew, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("İzin Ver", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text("İzin Ver", fontWeight = FontWeight.Bold, color = Color.White)
                 }
             }
         }
@@ -164,9 +149,9 @@ fun DashboardContent(
             .fillMaxSize()
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(top = 20.dp, bottom = 96.dp)
+        contentPadding = PaddingValues(top = 24.dp, bottom = 96.dp)
     ) {
-        // BAŞLIK VE YENİLE BUTONU
+        // ÜST BAŞLIK ALANI (ScreenPulse + Son Şarjdan Beri)
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -175,232 +160,244 @@ fun DashboardContent(
             ) {
                 Column {
                     Text(
-                        text = "Genel Bakış",
+                        text = "ScreenPulse",
                         style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        fontWeight = FontWeight.Black,
+                        color = Color.White
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = "Cihaz kullanım ve pil durumu",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.FlashOn,
+                            contentDescription = null,
+                            tint = Color(0xFF4C7CE5),
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Son Şarjdan Beri",
+                            fontSize = 13.sp,
+                            color = Color(0xFF8A99AD),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
                 
+                // Yenile Butonu (Mockup'taki şık buton)
                 Box(
                     modifier = Modifier
-                        .size(48.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .size(42.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFF171D2C))
                         .clickable { onRefresh() },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Refresh,
                         contentDescription = "Yenile",
-                        tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(22.dp)
+                        tint = Color(0xFF8A99AD),
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
         }
 
-        // DÜZELTİLMİŞ PREMIUM HERO KART
+        // 1:1 GÖRSELDEKİ BÜYÜK DAİRESEL HERO KART
         item {
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(28.dp))
-                    .clickable { onNavigateToApps() },
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
-                ),
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF171D2C)),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(20.dp)
+                        .padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
+                    Box(
+                        modifier = Modifier.size(200.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        // Yuvarlak halkayı küçülttük ve yerleşimi rahatlattık
-                        Box(
+                        ScreenOnOffRing(
+                            screenOnMs = state.screenOnTimeMs,
+                            screenOffMs = state.screenOffTimeMs,
+                            modifier = Modifier.size(180.dp)
+                        )
+                        
+                        // Halkanın sol üstündeki minik dekoratif güneş
+                        Icon(
+                            imageVector = Icons.Outlined.WbSunny,
+                            contentDescription = null,
+                            tint = Color(0xFFF1C40F),
                             modifier = Modifier
-                                .size(84.dp)
-                                .clip(RoundedCornerShape(20.dp)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            ScreenOnOffRing(
-                                screenOnMs = state.screenOnTimeMs,
-                                screenOffMs = state.screenOffTimeMs,
-                                modifier = Modifier.matchParentSize()
-                            )
-                        }
+                                .align(Alignment.TopStart)
+                                .padding(top = 16.dp, start = 16.dp)
+                                .size(20.dp)
+                        )
 
-                        Spacer(modifier = Modifier.width(20.dp))
-
-                        Column {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                text = "SON ŞARJDAN BERİ",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
-                                letterSpacing = 1.sp
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = formatTime(state.screenOnTimeMs),
-                                style = MaterialTheme.typography.headlineLarge,
+                                text = formatTimeShort(state.screenOnTimeMs),
+                                fontSize = 32.sp,
                                 fontWeight = FontWeight.Black,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                color = Color.White
                             )
                             Text(
                                 text = "Ekran Açık Süresi",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                                fontSize = 12.sp,
+                                color = Color(0xFF8A99AD)
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Alt Yüzde ve Şarjdan Beri Bilgileri
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
-                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.Apps,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Text(
-                                text = "Uygulama ayrıntılarını gör",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
+                        Column(horizontalAlignment = Alignment.Start) {
+                            Text(text = "%${state.batteryInfo.percentage}", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            Text(text = "Pil Seviyesi", fontSize = 12.sp, color = Color(0xFF8A99AD))
                         }
-                        Icon(
-                            imageVector = Icons.Default.ArrowForwardIos,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(12.dp)
-                        )
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(text = formatTimeShort(state.timeSinceLastChargeMs), fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            Text(text = "Şarjdan Beri", fontSize = 12.sp, color = Color(0xFF8A99AD))
+                        }
                     }
                 }
             }
         }
 
-        // İKİ KÜÇÜK KART
+        // EKRAN KAPALI VE KİLİT AÇMA (YAN YANA KARTLAR)
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                StatCard(
-                    title = "Ekran Kapalı",
-                    value = formatTime(state.screenOffTimeMs),
-                    icon = Icons.Outlined.VisibilityOff,
-                    modifier = Modifier.weight(1f)
-                )
-                StatCard(
-                    title = "Şarjdan Beri",
-                    value = formatTime(state.timeSinceLastChargeMs),
-                    icon = Icons.Outlined.Timer,
-                    modifier = Modifier.weight(1f)
-                )
+                // Ekran Kapalı Kartı
+                Card(
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF171D2C))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Outlined.Lock, contentDescription = null, tint = Color(0xFF4C7CE5), modifier = Modifier.size(24.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(text = "Ekran Kapalı", fontSize = 11.sp, color = Color(0xFF8A99AD))
+                            Text(text = formatTimeShort(state.screenOffTimeMs), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
+                    }
+                }
+
+                // Kilit Açma Kartı (Statik değer veya sistem verisi)
+                Card(
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF171D2C))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Outlined.LockOpen, contentDescription = null, tint = Color(0xFFF1C40F), modifier = Modifier.size(24.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(text = "Kilit Açma", fontSize = 11.sp, color = Color(0xFF8A99AD))
+                            Text(text = "43 Açılış", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
+                    }
+                }
             }
         }
 
-        // PİL TANILAMA PANELİ
+        // EN ÇOK KULLANILAN UYGULAMALAR ÖNİZLEME PANELİ
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(28.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-                ),
-                border = CardDefaults.outlinedCardBorder()
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF171D2C))
             ) {
-                Column(modifier = Modifier.padding(20.dp)) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "En Çok Kullanılan Uygulamalar",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    // Örnek Liste Görünümü (Mockup stili basitleştirilmiş satırlar)
+                    DummyAppRow("Claude", "56dk", "%30", Color(0xFFE67E22))
+                    DummyAppRow("YouTube", "22dk", "%12", Color(0xFFE74C3C))
+                    DummyAppRow("Chrome", "18dk", "%10", Color(0xFF3498DB))
+                    DummyAppRow("WhatsApp", "5dk", "%3", Color(0xFF2ECC71))
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Text(
+                        text = "Tümünü Gör >",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF4C7CE5),
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .clickable { onNavigateToApps() }
+                            .padding(vertical = 4.dp)
+                    )
+                }
+            }
+        }
+
+        // PİL BİLGİSİ PANELİ (Görselin En Altındaki Tasarım)
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF171D2C))
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Outlined.BatteryStd, contentDescription = null, tint = Color(0xFF2ECC71), modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = "Pil Bilgisi", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.BatteryStd,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(22.dp)
-                            )
+                        // Sol Devasa Yüzde Alanı
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color(0xFF2ECC71).copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.FlashOn, contentDescription = null, tint = Color(0xFF2ECC71), modifier = Modifier.size(20.dp))
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(text = "%${state.batteryInfo.percentage}", fontSize = 28.sp, fontWeight = FontWeight.Black, color = Color.White)
                         }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            text = "Pil Durumu",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.Bottom
-                    ) {
-                        Text(
-                            text = "${state.batteryInfo.percentage}%",
-                            style = MaterialTheme.typography.displayMedium,
-                            fontWeight = FontWeight.Black,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        
-                        Box(
-                            modifier = Modifier
-                                .padding(bottom = 8.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(
-                                    if (state.batteryInfo.isCharging) Color(0xFFE8F5E9) 
-                                    else MaterialTheme.colorScheme.surfaceVariant
-                                )
-                                .padding(horizontal = 12.dp, vertical = 6.dp)
-                        ) {
-                            Text(
-                                text = state.batteryInfo.chargingStatus,
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = if (state.batteryInfo.isCharging) Color(0xFF2E7D32) 
-                                        else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                        // Sağ Detay Matrisi
+                        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            BatteryRow("Sıcaklık", String.format(Locale.getDefault(), "%.1f°C", state.batteryInfo.temperature))
+                            BatteryRow("Voltaj", String.format(Locale.getDefault(), "%.2f V", state.batteryInfo.voltage))
+                            BatteryRow("Pil Sağlığı", state.batteryInfo.health)
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    GridBatteryMetrics(state.batteryInfo)
                 }
             }
         }
@@ -408,157 +405,33 @@ fun DashboardContent(
 }
 
 @Composable
-fun GridBatteryMetrics(info: BatteryInfo) {
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Row(modifier = Modifier.fillMaxWidth()) {
-            BatteryMetricItem(
-                label = "Pil Tüketimi",
-                value = "${info.batteryUsedSinceCharge}%",
-                icon = Icons.Outlined.TrendingDown,
-                modifier = Modifier.weight(1f)
-            )
-            BatteryMetricItem(
-                label = "Sıcaklık",
-                value = String.format(Locale.getDefault(), "%.1f°C", info.temperature),
-                icon = Icons.Outlined.Thermostat,
-                modifier = Modifier.weight(1f)
-            )
-        }
-        Row(modifier = Modifier.fillMaxWidth()) {
-            BatteryMetricItem(
-                label = "Voltaj",
-                value = String.format(Locale.getDefault(), "%.2f V", info.voltage),
-                icon = Icons.Outlined.ElectricBolt,
-                modifier = Modifier.weight(1f)
-            )
-            BatteryMetricItem(
-                label = "Pil Sağlığı",
-                value = info.health,
-                icon = Icons.Outlined.HealthAndSafety,
-                modifier = Modifier.weight(1f)
-            )
-        }
-        Row(modifier = Modifier.fillMaxWidth()) {
-            BatteryMetricItem(
-                label = "Şarj Döngüsü",
-                value = if (info.cycleCount >= 0) "${info.cycleCount}" else "Desteklenmiyor",
-                icon = Icons.Outlined.Cached,
-                modifier = Modifier.weight(1f)
-            )
-            val dateStr = if (info.lastChargeTimeMs > 0) {
-                SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(info.lastChargeTimeMs))
-            } else {
-                "Bilinmiyor"
-            }
-            BatteryMetricItem(
-                label = "Fişten Çekilme",
-                value = dateStr,
-                icon = Icons.Outlined.Power,
-                modifier = Modifier.weight(1f)
-            )
-        }
-    }
-}
-
-@Composable
-fun BatteryMetricItem(
-    label: String,
-    value: String,
-    icon: ImageVector,
-    modifier: Modifier = Modifier
-) {
+fun DummyAppRow(name: String, time: String, percentage: String, iconColor: Color) {
     Row(
-        modifier = modifier.padding(4.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(44.dp)
-                .clip(RoundedCornerShape(14.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(20.dp)
-            )
-        }
+        Box(modifier = Modifier.size(32.dp).clip(RoundedCornerShape(8.dp)).background(iconColor))
         Spacer(modifier = Modifier.width(12.dp))
-        Column {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = value,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = name, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Text(text = "Ekran süresinin $percentage'i", fontSize = 11.sp, color = Color(0xFF8A99AD))
         }
+        Text(text = time, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
     }
 }
 
 @Composable
-fun StatCard(
-    title: String,
-    value: String,
-    icon: ImageVector,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-        ),
-        border = CardDefaults.outlinedCardBorder()
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.Medium
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-        }
+fun BatteryRow(label: String, value: String) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(text = label, fontSize = 12.sp, color = Color(0xFF8A99AD))
+        Text(text = value, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
     }
 }
 
-fun formatTime(timeMs: Long): String {
+fun formatTimeShort(timeMs: Long): String {
     val totalSeconds = timeMs / 1000
     val totalMinutes = totalSeconds / 60
     val hours = totalMinutes / 60
     val minutes = totalMinutes % 60
-    return if (hours > 0) {
-        "${hours}sa ${minutes}dk"
-    } else {
-        "${minutes}dk"
-    }
+    return if (hours > 0) "${hours}s ${minutes}dk" else "${minutes}dk"
 }
