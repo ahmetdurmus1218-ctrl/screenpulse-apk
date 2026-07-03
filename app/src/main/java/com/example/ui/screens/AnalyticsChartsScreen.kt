@@ -41,7 +41,7 @@ fun AnalyticsChartsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var selectedTab by remember { mutableStateOf(0) } // 0 = Hourly, 1 = Daily, 2 = Weekly, 3 = Monthly
-    val tabLabels = listOf("Hourly", "Daily", "Weekly", "Monthly")
+    val tabLabels = listOf("Saatlik", "Günlük", "Haftalık", "Aylık")
 
     Box(
         modifier = modifier
@@ -65,7 +65,7 @@ fun AnalyticsChartsScreen(
                 if (!state.hasPermission) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
-                            text = "Please grant permission to view analytics.",
+                            text = "Analizleri görüntülemek için izin verin.",
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -80,7 +80,7 @@ fun AnalyticsChartsScreen(
                         // Title
                         item {
                             Text(
-                                text = "Analytics Reports",
+                                text = "Analiz Raporları",
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -106,7 +106,7 @@ fun AnalyticsChartsScreen(
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            text = "Screen Time Patterns",
+                                            text = "Ekran Süresi Örüntüleri",
                                             style = MaterialTheme.typography.titleMedium,
                                             fontWeight = FontWeight.Bold
                                         )
@@ -171,7 +171,7 @@ fun AnalyticsChartsScreen(
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            text = "Battery Drain Curve (24h)",
+                                            text = "Pil Tüketim Eğrisi (24s)",
                                             style = MaterialTheme.typography.titleMedium,
                                             fontWeight = FontWeight.Bold
                                         )
@@ -223,7 +223,7 @@ fun AnalyticsChartsScreen(
                                             )
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Text(
-                                                text = "Usage Proportion",
+                                                text = "Kullanım Oranı",
                                                 style = MaterialTheme.typography.titleSmall,
                                                 fontWeight = FontWeight.Bold
                                             )
@@ -236,12 +236,12 @@ fun AnalyticsChartsScreen(
                                         val offPct = if (total > 0) (state.screenOffTimeMs / total) * 100 else 0f
 
                                         Text(
-                                            text = String.format(Locale.getDefault(), "Screen On: %.1f%%", onPct),
+                                            text = String.format(Locale.getDefault(), "Ekran Açık: %.1f%%", onPct),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                         Text(
-                                            text = String.format(Locale.getDefault(), "Standby/Off: %.1f%%", offPct),
+                                            text = String.format(Locale.getDefault(), "Bekleme/Kapalı: %.1f%%", offPct),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -269,7 +269,7 @@ fun AnalyticsChartsScreen(
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            text = "Most Used Apps Leaderboard",
+                                            text = "En Çok Kullanılan Uygulamalar",
                                             style = MaterialTheme.typography.titleMedium,
                                             fontWeight = FontWeight.Bold
                                         )
@@ -280,7 +280,7 @@ fun AnalyticsChartsScreen(
                                     val topApps = state.appUsageList.sortedByDescending { it.screenTimeSinceChargeMs }.take(5)
                                     if (topApps.isEmpty()) {
                                         Text(
-                                            text = "No apps recorded screen time yet.",
+                                            text = "Henüz hiçbir uygulama için ekran süresi kaydedilmedi.",
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             textAlign = TextAlign.Center,
@@ -406,7 +406,7 @@ fun getChartDataForPeriod(periodIndex: Int, history: List<UsageHistoryEntity>): 
                 val weekSot = list.sumOf { it.screenOnTimeMs }
                 val weekSoff = list.sumOf { it.screenOffTimeMs }
                 UsageHistoryEntity(
-                    date = "Wk ${index + 1}",
+                    date = "Hf ${index + 1}",
                     screenOnTimeMs = weekSot,
                     screenOffTimeMs = weekSoff,
                     batteryUsedPct = list.sumOf { it.batteryUsedPct },
@@ -424,14 +424,14 @@ fun getChartDataForPeriod(periodIndex: Int, history: List<UsageHistoryEntity>): 
                     totalTimeSinceChargeMs = 30 * 24 * 3600 * 1000L
                 ),
                 UsageHistoryEntity(
-                    date = "Jun",
+                    date = "Haz",
                     screenOnTimeMs = (135 * 3600 * 1000L),
                     screenOffTimeMs = (480 * 3600 * 1000L),
                     batteryUsedPct = 1350,
                     totalTimeSinceChargeMs = 30 * 24 * 3600 * 1000L
                 ),
                 UsageHistoryEntity(
-                    date = "Jul",
+                    date = "Tem",
                     screenOnTimeMs = (history.sumOf { it.screenOnTimeMs }).coerceAtLeast(100 * 3600 * 1000L),
                     screenOffTimeMs = (history.sumOf { it.screenOffTimeMs }).coerceAtLeast(400 * 3600 * 1000L),
                     batteryUsedPct = 1100,

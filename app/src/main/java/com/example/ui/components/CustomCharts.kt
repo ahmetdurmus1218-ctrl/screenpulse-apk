@@ -96,7 +96,7 @@ fun ScreenOnOffRing(
                 color = onSurface
             )
             Text(
-                text = "Screen On Time",
+                text = "Ekran Açık Süresi",
                 style = MaterialTheme.typography.labelMedium,
                 color = onSurface.copy(alpha = 0.6f)
             )

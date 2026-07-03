@@ -117,7 +117,7 @@ fun PermissionOnboarding(
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.img_permission_pulse_1783019355690),
-                    contentDescription = "Usage Permission Pulse",
+                    contentDescription = "Kullanım İzni Görseli",
                     modifier = Modifier
                         .size(160.dp)
                         .clip(RoundedCornerShape(24.dp))
@@ -126,7 +126,7 @@ fun PermissionOnboarding(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Text(
-                    text = "Usage Access Required",
+                    text = "Kullanım Erişimi Gerekli",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -136,7 +136,7 @@ fun PermissionOnboarding(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    text = "ScreenPulse tracks Screen On Time, battery health, and application telemetry locally using secure Android system APIs. No personal data ever leaves your device.",
+                    text = "ScreenPulse; ekran açık kalma süresini, pil sağlığını ve uygulama kullanım verilerini güvenli Android sistem API'leri ile yalnızca cihazınızda takip eder. Hiçbir kişisel veri cihazınızdan dışarı çıkmaz.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -154,7 +154,7 @@ fun PermissionOnboarding(
                 ) {
                     Icon(imageVector = Icons.Filled.OpenInNew, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Grant Permission", fontWeight = FontWeight.Bold)
+                    Text("İzin Ver", fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -201,7 +201,7 @@ fun DashboardContent(
 
                     Column {
                         Text(
-                            text = "Since Last Charge",
+                            text = "Son Şarjdan Beri",
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                         )
@@ -215,7 +215,7 @@ fun DashboardContent(
                         Spacer(modifier = Modifier.height(8.dp))
                         AssistChip(
                             onClick = onNavigateToApps,
-                            label = { Text("View App Usage") },
+                            label = { Text("Uygulama Kullanımını Gör") },
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.Apps,
@@ -239,13 +239,13 @@ fun DashboardContent(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 StatCard(
-                    title = "Screen Off Time",
+                    title = "Ekran Kapalı Süresi",
                     value = formatTime(state.screenOffTimeMs),
                     icon = Icons.Outlined.VisibilityOff,
                     modifier = Modifier.weight(1f)
                 )
                 StatCard(
-                    title = "Active Standby",
+                    title = "Bekleme Süresi",
                     value = formatTime(state.timeSinceLastChargeMs),
                     icon = Icons.Outlined.Timer,
                     modifier = Modifier.weight(1f)
@@ -277,7 +277,7 @@ fun DashboardContent(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Battery Diagnostics",
+                                text = "Pil Tanılama",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -285,7 +285,7 @@ fun DashboardContent(
                         }
 
                         IconButton(onClick = onRefresh) {
-                            Icon(imageVector = Icons.Default.Refresh, contentDescription = "Refresh")
+                            Icon(imageVector = Icons.Default.Refresh, contentDescription = "Yenile")
                         }
                     }
 
@@ -330,13 +330,13 @@ fun GridBatteryMetrics(info: BatteryInfo) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Row(modifier = Modifier.fillMaxWidth()) {
             BatteryMetricItem(
-                label = "Battery Drain",
+                label = "Pil Tüketimi",
                 value = "${info.batteryUsedSinceCharge}%",
                 icon = Icons.Outlined.TrendingDown,
                 modifier = Modifier.weight(1f)
             )
             BatteryMetricItem(
-                label = "Temperature",
+                label = "Sıcaklık",
                 value = String.format(Locale.getDefault(), "%.1f°C", info.temperature),
                 icon = Icons.Outlined.Thermostat,
                 modifier = Modifier.weight(1f)
@@ -344,13 +344,13 @@ fun GridBatteryMetrics(info: BatteryInfo) {
         }
         Row(modifier = Modifier.fillMaxWidth()) {
             BatteryMetricItem(
-                label = "Voltage",
+                label = "Voltaj",
                 value = String.format(Locale.getDefault(), "%.2f V", info.voltage),
                 icon = Icons.Outlined.ElectricBolt,
                 modifier = Modifier.weight(1f)
             )
             BatteryMetricItem(
-                label = "Battery Health",
+                label = "Pil Sağlığı",
                 value = info.health,
                 icon = Icons.Outlined.HealthAndSafety,
                 modifier = Modifier.weight(1f)
@@ -358,18 +358,18 @@ fun GridBatteryMetrics(info: BatteryInfo) {
         }
         Row(modifier = Modifier.fillMaxWidth()) {
             BatteryMetricItem(
-                label = "Cycle Count",
-                value = if (info.cycleCount >= 0) "${info.cycleCount}" else "Unsupported",
+                label = "Şarj Döngüsü",
+                value = if (info.cycleCount >= 0) "${info.cycleCount}" else "Desteklenmiyor",
                 icon = Icons.Outlined.Cached,
                 modifier = Modifier.weight(1f)
             )
             val dateStr = if (info.lastChargeTimeMs > 0) {
                 SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date(info.lastChargeTimeMs))
             } else {
-                "Unknown"
+                "Bilinmiyor"
             }
             BatteryMetricItem(
-                label = "Last Charger Pull",
+                label = "Son Şarj Çekilme",
                 value = dateStr,
                 icon = Icons.Outlined.Power,
                 modifier = Modifier.weight(1f)
@@ -465,8 +465,8 @@ fun formatTime(timeMs: Long): String {
     val hours = totalMinutes / 60
     val minutes = totalMinutes % 60
     return if (hours > 0) {
-        "${hours}h ${minutes}m"
+        "${hours}sa ${minutes}dk"
     } else {
-        "${minutes}m"
+        "${minutes}dk"
     }
 }

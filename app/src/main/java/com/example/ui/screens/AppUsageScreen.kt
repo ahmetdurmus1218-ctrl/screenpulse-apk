@@ -92,12 +92,12 @@ fun AppUsageScreen(
                         TextField(
                             value = searchQuery,
                             onValueChange = { viewModel.setSearchQuery(it) },
-                            placeholder = { Text("Search installed apps...") },
+                            placeholder = { Text("Yüklü uygulamalarda ara...") },
                             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                             trailingIcon = {
                                 if (searchQuery.isNotEmpty()) {
                                     IconButton(onClick = { viewModel.setSearchQuery("") }) {
-                                        Icon(Icons.Default.Close, contentDescription = "Clear search")
+                                        Icon(Icons.Default.Close, contentDescription = "Aramayı temizle")
                                     }
                                 }
                             },
@@ -125,7 +125,7 @@ fun AppUsageScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.FilterList,
-                                    contentDescription = "Sort Options",
+                                    contentDescription = "Sıralama Seçenekleri",
                                     tint = MaterialTheme.colorScheme.onSecondaryContainer
                                 )
                             }
@@ -135,7 +135,7 @@ fun AppUsageScreen(
                                 onDismissRequest = { showSortMenu = false }
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text("Sort by Usage Time") },
+                                    text = { Text("Kullanım Süresine Göre Sırala") },
                                     leadingIcon = { Icon(Icons.Outlined.Timer, contentDescription = null) },
                                     onClick = {
                                         viewModel.setSortBy(ScreenPulseViewModel.SortOption.USAGE_TIME)
@@ -143,7 +143,7 @@ fun AppUsageScreen(
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("Sort by Name") },
+                                    text = { Text("İsme Göre Sırala") },
                                     leadingIcon = { Icon(Icons.Outlined.SortByAlpha, contentDescription = null) },
                                     onClick = {
                                         viewModel.setSortBy(ScreenPulseViewModel.SortOption.APP_NAME)
@@ -151,7 +151,7 @@ fun AppUsageScreen(
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("Sort by Percentage") },
+                                    text = { Text("Yüzdeye Göre Sırala") },
                                     leadingIcon = { Icon(Icons.Outlined.PieChart, contentDescription = null) },
                                     onClick = {
                                         viewModel.setSortBy(ScreenPulseViewModel.SortOption.PERCENTAGE)
@@ -240,7 +240,7 @@ fun AppUsageRow(item: AppUsageItem) {
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = String.format(Locale.getDefault(), "%.1f%% of screen session", item.percentageOfTotal),
+                        text = String.format(Locale.getDefault(), "Ekran süresinin %.1f%%'i", item.percentageOfTotal),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -255,7 +255,7 @@ fun AppUsageRow(item: AppUsageItem) {
                     )
                     Icon(
                         imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                        contentDescription = "Expand details",
+                        contentDescription = "Detayları genişlet",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                         modifier = Modifier.size(18.dp)
                     )
@@ -276,8 +276,8 @@ fun AppUsageRow(item: AppUsageItem) {
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        UsageDetailItem(label = "Today's Usage", value = formatTime(item.todayUsageMs))
-                        UsageDetailItem(label = "Daily Avg (7d)", value = formatTime(item.dailyAverageMs))
+                        UsageDetailItem(label = "Bugünkü Kullanım", value = formatTime(item.todayUsageMs))
+                        UsageDetailItem(label = "Günlük Ort. (7g)", value = formatTime(item.dailyAverageMs))
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -286,8 +286,8 @@ fun AppUsageRow(item: AppUsageItem) {
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        UsageDetailItem(label = "Foreground Session", value = formatTime(item.foregroundTimeMs))
-                        UsageDetailItem(label = "Background Usage", value = "Unsupported") // Indicated as unsupported
+                        UsageDetailItem(label = "Ön Planda Kullanım", value = formatTime(item.foregroundTimeMs))
+                        UsageDetailItem(label = "Arka Plan Kullanımı", value = "Desteklenmiyor") // Indicated as unsupported
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -297,10 +297,10 @@ fun AppUsageRow(item: AppUsageItem) {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         UsageDetailItem(
-                            label = "Est. Battery Impact",
+                            label = "Tah. Pil Etkisi",
                             value = String.format(Locale.getDefault(), "%.1f%%", item.estimatedBatteryUsagePct)
                         )
-                        UsageDetailItem(label = "Package Status", value = "Active")
+                        UsageDetailItem(label = "Paket Durumu", value = "Aktif")
                     }
                 }
             }
@@ -343,14 +343,14 @@ fun EmptyAppSearchState() {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "No applications found",
+            text = "Uygulama bulunamadı",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Try refining your query or verify the linter filter.",
+            text = "Aramanızı daraltmayı deneyin veya filtreyi kontrol edin.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center

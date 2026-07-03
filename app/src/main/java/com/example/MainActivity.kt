@@ -48,9 +48,9 @@ enum class ScreenRoute(
     val selectedIcon: ImageVector,
     val unselectedIcon: ImageVector
 ) {
-    DASHBOARD("dashboard", "Dashboard", Icons.Filled.Dashboard, Icons.Outlined.Dashboard),
-    APPS("apps", "App Usage", Icons.Filled.Apps, Icons.Outlined.Apps),
-    CHARTS("charts", "Analytics", Icons.Filled.BarChart, Icons.Outlined.BarChart)
+    DASHBOARD("dashboard", "Özet", Icons.Filled.Dashboard, Icons.Outlined.Dashboard),
+    APPS("apps", "Uygulamalar", Icons.Filled.Apps, Icons.Outlined.Apps),
+    CHARTS("charts", "Analiz", Icons.Filled.BarChart, Icons.Outlined.BarChart)
 }
 
 class MainActivity : ComponentActivity() {

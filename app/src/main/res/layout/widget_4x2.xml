@@ -33,7 +33,7 @@
             android:id="@+id/widget_sot_value"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="0h 0m"
+            android:text="0sa 0dk"
             android:textColor="#FFFFFF"
             android:textSize="28sp"
             android:textStyle="bold" />
@@ -41,7 +41,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Screen On Time since charge"
+            android:text="Şarj sonrası ekran açık süresi"
             android:textColor="#AAFFFFFF"
             android:textSize="12sp" />
 
@@ -49,7 +49,7 @@
             android:id="@+id/widget_last_charge_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Last Pull: 12:00 PM"
+            android:text="Son Şarj: 12:00"
             android:textColor="#55FFFFFF"
             android:textSize="10sp"
             android:layout_marginTop="4dp" />

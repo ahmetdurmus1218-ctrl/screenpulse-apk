@@ -89,9 +89,9 @@ open class ScreenPulseWidgetProvider : AppWidgetProvider() {
         val sotStr = formatWidgetTime(screenOnMs)
         val soffStr = formatWidgetTime(screenOffMs)
         val lastChargeStr = if (batteryInfo.lastChargeTimeMs > 0) {
-            "Pull: " + SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date(batteryInfo.lastChargeTimeMs))
+            "Şarj: " + SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date(batteryInfo.lastChargeTimeMs))
         } else {
-            "Pull: Unknown"
+            "Şarj: Bilinmiyor"
         }
 
         return when {
@@ -128,7 +128,7 @@ open class ScreenPulseWidgetProvider : AppWidgetProvider() {
                 // 2x2 Widget
                 RemoteViews(context.packageName, R.layout.widget_2x2).apply {
                     setTextViewText(R.id.widget_sot_value, sotStr)
-                    setTextViewText(R.id.widget_battery, "Battery: ${batteryInfo.percentage}%")
+                    setTextViewText(R.id.widget_battery, "Pil: ${batteryInfo.percentage}%")
                 }
             }
         }
@@ -176,7 +176,7 @@ open class ScreenPulseWidgetProvider : AppWidgetProvider() {
 
         // Draw percentage text
         canvas.drawText("${percentage}%", 80f, 85f, paintText)
-        canvas.drawText("BATTERY", 80f, 112f, paintLabel)
+        canvas.drawText("PİL", 80f, 112f, paintLabel)
 
         return bitmap
     }
@@ -187,9 +187,9 @@ open class ScreenPulseWidgetProvider : AppWidgetProvider() {
         val hours = totalMinutes / 60
         val minutes = totalMinutes % 60
         return if (hours > 0) {
-            "${hours}h ${minutes}m"
+            "${hours}sa ${minutes}dk"
         } else {
-            "${minutes}m"
+            "${minutes}dk"
         }
     }
 
