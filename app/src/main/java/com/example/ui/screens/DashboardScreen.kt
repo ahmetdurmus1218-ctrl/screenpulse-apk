@@ -29,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.BatteryInfo
+import com.example.ui.components.ScreenOnOffRing
 import com.example.ui.viewmodel.MainUiState
 import com.example.ui.viewmodel.ScreenPulseViewModel
 import java.text.SimpleDateFormat
@@ -165,33 +166,34 @@ fun DashboardContent(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(top = 24.dp, bottom = 96.dp)
     ) {
-        // BAŞLIK VE YENİLE BUTONU
+        // Header: logo + title + refresh
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_widget_pulse),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(26.dp)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        text = "Genel Bakış",
-                        style = MaterialTheme.typography.headlineMedium,
+                        text = "ScreenPulse",
+                        style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Black,
                         color = MaterialTheme.colorScheme.onSurface,
                         letterSpacing = (-0.5).sp
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = "Cihaz kullanım ve pil durumu",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
                 }
-                
+
                 Box(
                     modifier = Modifier
-                        .size(48.dp)
-                        .clip(RoundedCornerShape(16.dp))
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(14.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
                         .clickable { onRefresh() },
                     contentAlignment = Alignment.Center
@@ -200,121 +202,101 @@ fun DashboardContent(
                         imageVector = Icons.Default.Refresh,
                         contentDescription = "Yenile",
                         tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
         }
 
-        // TAMAMEN YENİLENEN SIFIR RİSKLİ PREMIUM DİJİTAL SAYAÇ KARTI
+        // Hero ring card
         item {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(32.dp))
-                    .clickable { onNavigateToApps() },
+                    .clip(RoundedCornerShape(32.dp)),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
                 ),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp)
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Yuvarlak halka yerine kontrol merkezi stili şık bir ikon alanı
-                        Box(
-                            modifier = Modifier
-                                .size(64.dp)
-                                .clip(RoundedCornerShape(20.dp))
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.HourglassTop,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(30.dp)
-                            )
-                        }
+                    Spacer(modifier = Modifier.height(28.dp))
 
-                        Spacer(modifier = Modifier.width(20.dp))
+                    Text(
+                        text = "Son Şarjdan Beri",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                    )
 
-                        Column {
-                            Text(
-                                text = "SON ŞARJDAN BERİ EKRAN",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
-                                letterSpacing = 1.2.sp
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = formatTime(state.screenOnTimeMs),
-                                style = MaterialTheme.typography.displayMedium,
-                                fontWeight = FontWeight.Black,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                letterSpacing = (-1).sp
-                            )
-                        }
-                    }
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                    Spacer(modifier = Modifier.height(20.dp))
-                    
+                    ScreenOnOffRing(
+                        screenOnMs = state.screenOnTimeMs,
+                        screenOffMs = state.screenOffTimeMs,
+                        modifier = Modifier.size(168.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.12f),
+                        modifier = Modifier.padding(horizontal = 24.dp)
+                    )
+
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(18.dp))
-                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.6f))
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                            .padding(horizontal = 24.dp, vertical = 18.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.Apps,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(10.dp))
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                text = "Uygulama ayrıntılarını gör",
-                                style = MaterialTheme.typography.bodyMedium,
+                                text = "${state.batteryInfo.percentage}%",
+                                style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Text(
+                                text = "Pil Seviyesi",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.65f)
                             )
                         }
-                        Icon(
-                            imageVector = Icons.Default.ArrowForwardIos,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(12.dp)
-                        )
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = formatTime(state.timeSinceLastChargeMs),
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Text(
+                                text = "Şarjdan Beri",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.65f)
+                            )
+                        }
                     }
                 }
             }
         }
 
-        // YAN YANA İKİ SİMETRİK KART
+        // Quick stats row (data we actually track)
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 StatCard(
-                    title = "Ekran Kapalı",
+                    title = "Ekran Kapalı Süresi",
                     value = formatTime(state.screenOffTimeMs),
                     icon = Icons.Outlined.VisibilityOff,
                     modifier = Modifier.weight(1f)
                 )
                 StatCard(
-                    title = "Şarjdan Beri",
+                    title = "Bekleme Süresi",
                     value = formatTime(state.timeSinceLastChargeMs),
                     icon = Icons.Outlined.Timer,
                     modifier = Modifier.weight(1f)
@@ -322,45 +304,134 @@ fun DashboardContent(
             }
         }
 
-        // PİL TANILAMA PANELİ
+        // Most used apps mini list
+        if (state.appUsageList.isNotEmpty()) {
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                    ),
+                    border = CardDefaults.outlinedCardBorder()
+                ) {
+                    Column(modifier = Modifier.padding(20.dp)) {
+                        Text(
+                            text = "En Çok Kullanılan Uygulamalar",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        val topApps = state.appUsageList
+                            .sortedByDescending { it.todayUsageMs }
+                            .take(4)
+                        val maxUsage = topApps.maxOfOrNull { it.todayUsageMs }?.coerceAtLeast(1L) ?: 1L
+
+                        topApps.forEachIndexed { index, app ->
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = app.appName,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = formatTime(app.todayUsageMs),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(6.dp))
+                                LinearProgressIndicator(
+                                    progress = { (app.todayUsageMs.toFloat() / maxUsage.toFloat()).coerceIn(0.02f, 1f) },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(6.dp)
+                                        .clip(RoundedCornerShape(3.dp)),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                                )
+                            }
+                            if (index != topApps.lastIndex) {
+                                Spacer(modifier = Modifier.height(14.dp))
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        TextButton(
+                            onClick = onNavigateToApps,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Tümünü Gör")
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(
+                                imageVector = Icons.Default.ChevronRight,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Battery info card
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(32.dp),
+                shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
                 ),
                 border = CardDefaults.outlinedCardBorder()
             ) {
-                Column(modifier = Modifier.padding(24.dp)) {
+                Column(modifier = Modifier.padding(20.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.BatteryStd,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(22.dp)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(38.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.BatteryStd,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = "Pil Bilgisi",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            text = "Pil Durumu",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+
+                        IconButton(onClick = onRefresh) {
+                            Icon(imageVector = Icons.Default.Refresh, contentDescription = "Yenile")
+                        }
                     }
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -370,17 +441,15 @@ fun DashboardContent(
                             text = "${state.batteryInfo.percentage}%",
                             style = MaterialTheme.typography.displayMedium,
                             fontWeight = FontWeight.Black,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            letterSpacing = (-1).sp
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.width(12.dp))
-                        
                         Box(
                             modifier = Modifier
                                 .padding(bottom = 8.dp)
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(
-                                    if (state.batteryInfo.isCharging) Color(0xFFE8F5E9) 
+                                    if (state.batteryInfo.isCharging) Color(0xFF1B4332)
                                     else MaterialTheme.colorScheme.surfaceVariant
                                 )
                                 .padding(horizontal = 12.dp, vertical = 6.dp)
@@ -389,15 +458,15 @@ fun DashboardContent(
                                 text = state.batteryInfo.chargingStatus,
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = if (state.batteryInfo.isCharging) Color(0xFF2E7D32) 
+                                color = if (state.batteryInfo.isCharging) Color(0xFF7CE0A6)
                                         else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     GridBatteryMetrics(state.batteryInfo)
                 }
