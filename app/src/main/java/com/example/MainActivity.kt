@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
 import android.os.Bundle
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -89,8 +90,20 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        var keepSplashOn = true
+        splashScreen.setKeepOnScreenCondition { keepSplashOn }
+        android.os.Handler(mainLooper).postDelayed({ keepSplashOn = false }, 650)
+        splashScreen.setOnExitAnimationListener { splashScreenView ->
+            splashScreenView.view.animate()
+                .alpha(0f)
+                .setDuration(300)
+                .withEndAction { splashScreenView.remove() }
+                .start()
+        }
 
         val app = application as ScreenPulseApplication
         val factory = ScreenPulseViewModel.Factory(app.repository, app.settingsManager)

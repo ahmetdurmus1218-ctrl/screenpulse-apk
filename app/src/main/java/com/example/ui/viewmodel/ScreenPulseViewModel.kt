@@ -50,6 +50,16 @@ class ScreenPulseViewModel(
 
     init {
         refreshStats()
+        startAutoRefresh()
+    }
+
+    private fun startAutoRefresh() {
+        viewModelScope.launch {
+            while (true) {
+                kotlinx.coroutines.delay(30_000L) // refresh every 30s so on-screen timers actually progress
+                refreshStats()
+            }
+        }
     }
 
     fun setSearchQuery(query: String) {
