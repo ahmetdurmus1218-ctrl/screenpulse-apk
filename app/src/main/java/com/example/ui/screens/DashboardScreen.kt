@@ -71,10 +71,13 @@ fun DashboardScreen(
                         }
                     })
                 } else {
+                    val isDark by viewModel.isDarkTheme.collectAsState()
                     DashboardContent(
                         state = state,
                         onRefresh = { viewModel.refreshStats() },
-                        onNavigateToApps = onNavigateToApps
+                        onNavigateToApps = onNavigateToApps,
+                        isDarkTheme = isDark,
+                        onToggleTheme = { viewModel.toggleDarkTheme() }
                     )
                 }
             }
@@ -157,7 +160,9 @@ fun PermissionOnboarding(
 fun DashboardContent(
     state: MainUiState.Success,
     onRefresh: () -> Unit,
-    onNavigateToApps: () -> Unit
+    onNavigateToApps: () -> Unit,
+    isDarkTheme: Boolean = true,
+    onToggleTheme: () -> Unit = {}
 ) {
     LazyColumn(
         modifier = Modifier
@@ -190,20 +195,40 @@ fun DashboardContent(
                     )
                 }
 
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
-                        .clickable { onRefresh() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = "Yenile",
-                        tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(20.dp)
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
+                            .clickable { onToggleTheme() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = if (isDarkTheme) Icons.Outlined.LightMode else Icons.Outlined.DarkMode,
+                            contentDescription = if (isDarkTheme) "Açık temaya geç" else "Koyu temaya geç",
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(10.dp))
+
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
+                            .clickable { onRefresh() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Yenile",
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
         }

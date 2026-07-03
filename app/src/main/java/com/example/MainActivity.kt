@@ -125,7 +125,8 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            MyApplicationTheme {
+            val isDark by viewModel.isDarkTheme.collectAsState()
+            MyApplicationTheme(darkTheme = isDark) {
                 MainContainer(viewModel = viewModel)
             }
         }

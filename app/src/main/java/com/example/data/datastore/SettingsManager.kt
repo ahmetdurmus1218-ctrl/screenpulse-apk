@@ -15,6 +15,17 @@ class SettingsManager(private val context: Context) {
         private val KEY_LAST_UNPLUGGED_TIME = longPreferencesKey("last_unplugged_time")
         private val KEY_LAST_UNPLUGGED_BATTERY = intPreferencesKey("last_unplugged_battery")
         private val KEY_LAST_CHARGE_TIME = longPreferencesKey("last_charge_time")
+        private val KEY_DARK_THEME = booleanPreferencesKey("dark_theme")
+    }
+
+    val isDarkTheme: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[KEY_DARK_THEME] ?: true // app defaults to dark
+    }
+
+    suspend fun setDarkTheme(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[KEY_DARK_THEME] = enabled
+        }
     }
 
     val lastUnpluggedTime: Flow<Long> = context.dataStore.data.map { preferences ->

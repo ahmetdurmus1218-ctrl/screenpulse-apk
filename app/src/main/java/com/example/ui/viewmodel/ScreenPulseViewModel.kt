@@ -44,6 +44,15 @@ class ScreenPulseViewModel(
     private val _sortBy = MutableStateFlow(SortOption.USAGE_TIME)
     val sortBy: StateFlow<SortOption> = _sortBy.asStateFlow()
 
+    val isDarkTheme: StateFlow<Boolean> = settingsManager.isDarkTheme
+        .stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.Eagerly, true)
+
+    fun toggleDarkTheme() {
+        viewModelScope.launch {
+            settingsManager.setDarkTheme(!isDarkTheme.value)
+        }
+    }
+
     enum class SortOption {
         USAGE_TIME, APP_NAME, PERCENTAGE
     }
