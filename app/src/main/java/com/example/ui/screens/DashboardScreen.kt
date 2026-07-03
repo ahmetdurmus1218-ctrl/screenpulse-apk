@@ -22,12 +22,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.drawable.toBitmap
 import com.example.data.model.BatteryInfo
 import com.example.ui.components.ScreenOnOffRing
 import com.example.ui.viewmodel.MainUiState
@@ -318,13 +320,15 @@ fun DashboardContent(
                     title = "Ekran Kapalı Süresi",
                     value = formatTime(state.screenOffTimeMs),
                     icon = Icons.Outlined.VisibilityOff,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    accentColor = Color(0xFF8AB4F8)
                 )
                 StatCard(
                     title = "Bekleme Süresi",
                     value = formatTime(state.timeSinceLastChargeMs),
                     icon = Icons.Outlined.Timer,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    accentColor = Color(0xFFFFB74D)
                 )
             }
         }
@@ -355,37 +359,70 @@ fun DashboardContent(
                         val maxUsage = topApps.maxOfOrNull { it.todayUsageMs }?.coerceAtLeast(1L) ?: 1L
 
                         topApps.forEachIndexed { index, app ->
-                            Column(modifier = Modifier.fillMaxWidth()) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(38.dp)
+                                        .clip(RoundedCornerShape(11.dp))
+                                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                                    contentAlignment = Alignment.Center
                                 ) {
-                                    Text(
-                                        text = app.appName,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Medium,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        maxLines = 1,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = formatTime(app.todayUsageMs),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.primary
+                                    if (app.icon != null) {
+                                        val bitmap = remember(app.icon) {
+                                            app.icon.toBitmap(120, 120, android.graphics.Bitmap.Config.ARGB_8888).asImageBitmap()
+                                        }
+                                        Image(
+                                            bitmap = bitmap,
+                                            contentDescription = app.appName,
+                                            modifier = Modifier.size(28.dp)
+                                        )
+                                    } else {
+                                        Icon(
+                                            imageVector = Icons.Default.Android,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(22.dp)
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.width(12.dp))
+
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(
+                                            text = app.appName,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Medium,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            maxLines = 1,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = formatTime(app.todayUsageMs),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    LinearProgressIndicator(
+                                        progress = { (app.todayUsageMs.toFloat() / maxUsage.toFloat()).coerceIn(0.02f, 1f) },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(6.dp)
+                                            .clip(RoundedCornerShape(3.dp)),
+                                        color = MaterialTheme.colorScheme.primary,
+                                        trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                                     )
                                 }
-                                Spacer(modifier = Modifier.height(6.dp))
-                                LinearProgressIndicator(
-                                    progress = { (app.todayUsageMs.toFloat() / maxUsage.toFloat()).coerceIn(0.02f, 1f) },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(6.dp)
-                                        .clip(RoundedCornerShape(3.dp)),
-                                    color = MaterialTheme.colorScheme.primary,
-                                    trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                                )
                             }
                             if (index != topApps.lastIndex) {
                                 Spacer(modifier = Modifier.height(14.dp))
@@ -601,7 +638,8 @@ fun StatCard(
     title: String,
     value: String,
     icon: ImageVector,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    accentColor: Color = Color(0xFF8AB4F8)
 ) {
     Card(
         modifier = modifier,
@@ -616,13 +654,13 @@ fun StatCard(
                 modifier = Modifier
                     .size(38.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
+                    .background(accentColor.copy(alpha = 0.16f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = accentColor,
                     modifier = Modifier.size(18.dp)
                 )
             }
