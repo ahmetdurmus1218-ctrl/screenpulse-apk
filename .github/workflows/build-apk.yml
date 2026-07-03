@@ -4,6 +4,9 @@ on:
   push:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -40,7 +43,20 @@ jobs:
         run: echo "GEMINI_API_KEY=unused" > .env
 
       - name: Build debug APK
-        run: gradle assembleDebug --stacktrace
+        run: gradle assembleDebug --stacktrace > build_log.txt 2>&1 || echo "BUILD_FAILED=1" >> $GITHUB_ENV
+
+      - name: Commit build log back to repo (for diagnostics)
+        if: always()
+        run: |
+          git config user.email "ci@screenpulse.local"
+          git config user.name "ScreenPulse CI"
+          git add build_log.txt
+          git commit -m "CI build log [skip ci]" || echo "nothing to commit"
+          git push || echo "push failed, continuing"
+
+      - name: Fail job if build failed
+        if: env.BUILD_FAILED == '1'
+        run: exit 1
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
