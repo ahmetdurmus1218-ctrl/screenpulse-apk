@@ -6,16 +6,29 @@
     android:background="@drawable/widget_background"
     android:padding="16dp">
 
-    <TextView
-        android:id="@+id/widget_title"
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="ScreenPulse"
-        android:textColor="#88FFFFFF"
-        android:textSize="12sp"
-        android:textStyle="bold"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
         android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true">
+
+        <ImageView
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:src="@drawable/ic_widget_pulse" />
+
+        <TextView
+            android:id="@+id/widget_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:text="ScreenPulse"
+            android:textColor="#99AAB8E8"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -30,16 +43,18 @@
             android:layout_height="wrap_content"
             android:text="0sa 0dk"
             android:textColor="#FFFFFF"
-            android:textSize="26sp"
+            android:textSize="28sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/widget_sot_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="1dp"
             android:text="Ekran Açık"
-            android:textColor="#88FFFFFF"
-            android:textSize="11sp" />
+            android:textColor="#8AB4F8"
+            android:textSize="11sp"
+            android:textStyle="bold" />
     </LinearLayout>
 
     <TextView
@@ -47,7 +62,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Pil: 100%"
-        android:textColor="#4CAF50"
+        android:textColor="#7CE0A6"
         android:textSize="11sp"
         android:textStyle="bold"
         android:layout_alignParentBottom="true"

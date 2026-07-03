@@ -8,7 +8,6 @@
     android:padding="20dp"
     android:gravity="center_vertical">
 
-    <!-- SOT details on the left -->
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -16,18 +15,31 @@
         android:orientation="vertical"
         android:gravity="center_vertical">
 
-        <TextView
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="SCREEN PULSE"
-            android:textColor="#88FFFFFF"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.1" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="13dp"
+                android:layout_height="13dp"
+                android:src="@drawable/ic_widget_pulse" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:text="SCREENPULSE"
+                android:textColor="#99AAB8E8"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.1" />
+        </LinearLayout>
 
         <Spacer
             android:layout_width="match_parent"
-            android:layout_height="6dp" />
+            android:layout_height="8dp" />
 
         <TextView
             android:id="@+id/widget_sot_value"
@@ -35,27 +47,28 @@
             android:layout_height="wrap_content"
             android:text="0sa 0dk"
             android:textColor="#FFFFFF"
-            android:textSize="28sp"
+            android:textSize="30sp"
             android:textStyle="bold" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
             android:text="Şarj sonrası ekran açık süresi"
-            android:textColor="#AAFFFFFF"
-            android:textSize="12sp" />
+            android:textColor="#8AB4F8"
+            android:textSize="11sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/widget_last_charge_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Son Şarj: 12:00"
-            android:textColor="#55FFFFFF"
+            android:textColor="#66FFFFFF"
             android:textSize="10sp"
             android:layout_marginTop="4dp" />
     </LinearLayout>
 
-    <!-- Circular battery progress on the right -->
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="match_parent"
@@ -66,10 +79,10 @@
 
         <ImageView
             android:id="@+id/widget_battery_circle"
-            android:layout_width="72dp"
-            android:layout_height="72dp"
+            android:layout_width="76dp"
+            android:layout_height="76dp"
             android:scaleType="fitCenter"
-            android:contentDescription="Battery indicator" />
+            android:contentDescription="Pil göstergesi" />
     </LinearLayout>
 
 </LinearLayout>
