@@ -1,74 +1,51 @@
-
-Welcome to Gradle 9.3.1!
-
-Here are the highlights of this release:
- - Test reporting improvements
- - Error and warning improvements
- - Build authoring improvements
-
-For more details see https://docs.gradle.org/9.3.1/release-notes.html
-
 Starting a Gradle Daemon (subsequent builds will be faster)
 Calculating task graph as no cached configuration is available for tasks: assembleDebug
 > Task :app:generateDebugAssets UP-TO-DATE
 > Task :app:preBuild UP-TO-DATE
 > Task :app:preDebugBuild UP-TO-DATE
 > Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
-
-> Task :app:processDebugGoogleServices
-File google-services.json is missing.
-The Google Services Plugin cannot function without it.
-Searched locations: /home/runner/work/screenpulse-apk/screenpulse-apk/app/src/debug/google-services.json, /home/runner/work/screenpulse-apk/screenpulse-apk/app/src/debug/google-services.json, /home/runner/work/screenpulse-apk/screenpulse-apk/app/src/google-services.json, /home/runner/work/screenpulse-apk/screenpulse-apk/app/src/debug/google-services.json, /home/runner/work/screenpulse-apk/screenpulse-apk/app/src/Debug/google-services.json, /home/runner/work/screenpulse-apk/screenpulse-apk/app/google-services.json
-
-> Task :app:generateDebugResources
-> Task :app:generateDebugBuildConfig
-> Task :app:packageDebugResources
-> Task :app:javaPreCompileDebug
-> Task :app:mergeDebugAssets
-> Task :app:compressDebugAssets
-> Task :app:desugarDebugFileDependencies
-> Task :app:processDebugNavigationResources
+> Task :app:processDebugGoogleServices FROM-CACHE
+> Task :app:generateDebugResources FROM-CACHE
+> Task :app:generateDebugBuildConfig FROM-CACHE
+> Task :app:packageDebugResources FROM-CACHE
+> Task :app:javaPreCompileDebug FROM-CACHE
+> Task :app:processDebugNavigationResources FROM-CACHE
 > Task :app:checkDebugDuplicateClasses
-> Task :app:kspDebugKotlin
-> Task :app:checkDebugAarMetadata
-> Task :app:parseDebugLocalResources
-> Task :app:mergeExtDexDebug
+> Task :app:desugarDebugFileDependencies FROM-CACHE
+> Task :app:mergeDebugAssets
+> Task :app:compressDebugAssets FROM-CACHE
+> Task :app:mergeLibDexDebug FROM-CACHE
+> Task :app:parseDebugLocalResources FROM-CACHE
+> Task :app:generateDebugRFile FROM-CACHE
 > Task :app:mapDebugSourceSetPaths
-> Task :app:generateDebugRFile
-> Task :app:compileDebugNavigationResources
-> Task :app:mergeLibDexDebug
+> Task :app:compileDebugNavigationResources FROM-CACHE
+> Task :app:mergeDebugResources FROM-CACHE
 > Task :app:createDebugCompatibleScreenManifests
-> Task :app:extractDeepLinksDebug
-> Task :app:processDebugMainManifest
-> Task :app:processDebugManifest
-> Task :app:processDebugManifestForPackage
+> Task :app:extractDeepLinksDebug FROM-CACHE
+> Task :app:checkDebugAarMetadata
+> Task :app:processDebugMainManifest FROM-CACHE
 > Task :app:mergeDebugJniLibFolders
+> Task :app:kspDebugKotlin FROM-CACHE
+> Task :app:processDebugManifest FROM-CACHE
+> Task :app:processDebugManifestForPackage FROM-CACHE
+> Task :app:compileDebugKotlin FROM-CACHE
 > Task :app:mergeDebugNativeLibs
-> Task :app:mergeDebugResources
+> Task :app:processDebugResources FROM-CACHE
+> Task :app:processDebugJavaRes
+> Task :app:mergeExtDexDebug FROM-CACHE
 > Task :app:stripDebugDebugSymbols
-> Task :app:processDebugResources
 > Task :app:writeDebugAppMetadata
 > Task :app:writeDebugSigningConfigVersions
+> Task :app:compileDebugJavaWithJavac FROM-CACHE
+> Task :app:dexBuilderDebug FROM-CACHE
+> Task :app:mergeProjectDexDebug FROM-CACHE
 > Task :app:validateSigningDebug
-> Task :app:compileDebugKotlin
-w: file:///home/runner/work/screenpulse-apk/screenpulse-apk/app/src/main/java/com/example/data/database/ScreenPulseDatabase.kt:23:18 'fun fallbackToDestructiveMigration(): RoomDatabase.Builder<ScreenPulseDatabase>' is deprecated. Replace by overloaded version with parameter to indicate if all tables should be dropped or not.
-w: file:///home/runner/work/screenpulse-apk/screenpulse-apk/app/src/main/java/com/example/data/repository/UsageRepository.kt:30:20 'fun unsafeCheckOpNoThrow(p0: String, p1: Int, p2: String): Int' is deprecated. Deprecated in Java.
-w: file:///home/runner/work/screenpulse-apk/screenpulse-apk/app/src/main/java/com/example/ui/screens/AnalyticsChartsScreen.kt:266:73 'val Icons.Filled.TrendingUp: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.TrendingUp.
-w: file:///home/runner/work/screenpulse-apk/screenpulse-apk/app/src/main/java/com/example/ui/screens/AppUsageScreen.kt:272:21 'fun Divider(modifier: Modifier = ..., thickness: Dp = ..., color: Color = ...): Unit' is deprecated. Renamed to HorizontalDivider.
-w: file:///home/runner/work/screenpulse-apk/screenpulse-apk/app/src/main/java/com/example/ui/screens/DashboardScreen.kt:155:53 'val Icons.Filled.OpenInNew: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.OpenInNew.
-w: file:///home/runner/work/screenpulse-apk/screenpulse-apk/app/src/main/java/com/example/ui/screens/DashboardScreen.kt:317:21 'fun Divider(modifier: Modifier = ..., thickness: Dp = ..., color: Color = ...): Unit' is deprecated. Renamed to HorizontalDivider.
-w: file:///home/runner/work/screenpulse-apk/screenpulse-apk/app/src/main/java/com/example/ui/screens/DashboardScreen.kt:335:39 'val Icons.Outlined.TrendingDown: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.TrendingDown.
-
-> Task :app:processDebugJavaRes
 > Task :app:mergeDebugJavaResource
-> Task :app:compileDebugJavaWithJavac
-> Task :app:dexBuilderDebug
-> Task :app:mergeProjectDexDebug
 > Task :app:packageDebug
 > Task :app:assembleDebug
 > Task :app:createDebugApkListingFileRedirect
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1783059487000.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1783059828980.json
 
-BUILD SUCCESSFUL in 3m 35s
-39 actionable tasks: 39 executed
+BUILD SUCCESSFUL in 21s
+39 actionable tasks: 15 executed, 24 from cache
 Configuration cache entry stored.
