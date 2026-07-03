@@ -1,0 +1,49 @@
+name: Build Debug APK
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract project zip (if the project was uploaded as a .zip via GitHub's web UI)
+        run: |
+          ZIPFILE=$(find . -maxdepth 1 -iname "*.zip" | head -n1)
+          if [ -n "$ZIPFILE" ]; then
+            echo "Found $ZIPFILE, extracting..."
+            unzip -o "$ZIPFILE" -d .
+          else
+            echo "No zip found at repo root, assuming project files were pushed directly."
+          fi
+
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.13
+
+      - name: Create placeholder .env (Gemini key not used by this app)
+        run: echo "GEMINI_API_KEY=unused" > .env
+
+      - name: Build debug APK
+        run: gradle assembleDebug --stacktrace
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenpulse-debug-apk
+          path: app/build/outputs/apk/debug/*.apk

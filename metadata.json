@@ -1,0 +1,6 @@
+{
+  "name": "ScreenPulse",
+  "description": "An elegant, lightweight usage tracker that displays screen-on time, battery performance, and detailed app usage analytics with Material You widgets.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
