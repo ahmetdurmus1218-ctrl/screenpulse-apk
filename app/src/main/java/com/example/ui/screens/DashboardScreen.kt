@@ -14,7 +14,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -223,8 +221,9 @@ fun DashboardContent(
                             modifier = Modifier.size(180.dp)
                         )
                         
+                        // Tamamen standart Material kütüphanesinden WbSunny ikonu
                         Icon(
-                            imageVector = Icons.Outlined.WbSunny,
+                            imageVector = Icons.Default.WbSunny,
                             contentDescription = null,
                             tint = Color(0xFFF1C40F),
                             modifier = Modifier
@@ -281,7 +280,7 @@ fun DashboardContent(
                         modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Outlined.Lock, contentDescription = null, tint = Color(0xFF4C7CE5), modifier = Modifier.size(24.dp))
+                        Icon(Icons.Default.Lock, contentDescription = null, tint = Color(0xFF4C7CE5), modifier = Modifier.size(24.dp))
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(text = "Ekran Kapalı", fontSize = 11.sp, color = Color(0xFF8A99AD))
@@ -299,7 +298,7 @@ fun DashboardContent(
                         modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Outlined.LockOpen, contentDescription = null, tint = Color(0xFFF1C40F), modifier = Modifier.size(24.dp))
+                        Icon(Icons.Default.LockOpen, contentDescription = null, tint = Color(0xFFF1C40F), modifier = Modifier.size(24.dp))
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(text = "Kilit Açma", fontSize = 11.sp, color = Color(0xFF8A99AD))
@@ -325,10 +324,11 @@ fun DashboardContent(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     
-                    DummyAppRow("Claude", "56dk", "%30", Icons.Default.Android)
-                    DummyAppRow("YouTube", "22dk", "%12", Icons.Default.PlayArrow)
-                    DummyAppRow("Chrome", "18dk", "%10", Icons.Default.Web)
-                    DummyAppRow("WhatsApp", "5dk", "%3", Icons.Default.QuestionAnswer)
+                    // Harici kütüphaneye bağımlı ikonları kaldırıp projenin ana görselini (R.drawable) kullandık.
+                    DummyAppRow("Claude", "56dk", "%30")
+                    DummyAppRow("YouTube", "22dk", "%12")
+                    DummyAppRow("Chrome", "18dk", "%10")
+                    DummyAppRow("WhatsApp", "5dk", "%3")
 
                     Spacer(modifier = Modifier.height(8.dp))
                     
@@ -354,7 +354,7 @@ fun DashboardContent(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Outlined.BatteryStd, contentDescription = null, tint = Color(0xFF2ECC71), modifier = Modifier.size(18.dp))
+                        Icon(Icons.Default.BatteryStd, contentDescription = null, tint = Color(0xFF2ECC71), modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(text = "Pil Bilgisi", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
@@ -392,17 +392,17 @@ fun DashboardContent(
 }
 
 @Composable
-fun DummyAppRow(name: String, time: String, percentage: String, iconVector: ImageVector) {
+fun DummyAppRow(name: String, time: String, percentage: String) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier.size(32.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF171D2C)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(imageVector = iconVector, contentDescription = null, tint = Color(0xFF4C7CE5), modifier = Modifier.size(18.dp))
-        }
+        // İkon yerine projede kesin olarak var olan izin görselini minik boyutta kullandık.
+        Image(
+            painter = painterResource(id = R.drawable.img_permission_pulse_1783019355690),
+            contentDescription = null,
+            modifier = Modifier.size(32.dp).clip(RoundedCornerShape(8.dp))
+        )
         Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(text = name, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
