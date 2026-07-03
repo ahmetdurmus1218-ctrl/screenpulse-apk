@@ -18,6 +18,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
@@ -87,18 +89,27 @@ fun ScreenOnOffRing(
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxSize(0.62f)
+                .padding(4.dp)
         ) {
             val sotHours = screenOnMs / (1000f * 60 * 60)
             Text(
-                text = String.format(Locale.getDefault(), "%.1f Hrs", sotHours),
-                style = MaterialTheme.typography.titleLarge,
-                color = onSurface
+                text = String.format(Locale.getDefault(), "%.1f sa", sotHours),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.ExtraBold,
+                color = onSurface,
+                maxLines = 1,
+                textAlign = TextAlign.Center
             )
             Text(
-                text = "Ekran Açık Süresi",
-                style = MaterialTheme.typography.labelMedium,
-                color = onSurface.copy(alpha = 0.6f)
+                text = "Ekran Süresi",
+                style = MaterialTheme.typography.labelSmall,
+                fontSize = 10.sp,
+                color = onSurface.copy(alpha = 0.6f),
+                maxLines = 1,
+                textAlign = TextAlign.Center
             )
         }
     }
@@ -274,7 +285,14 @@ fun UsageBarChart(
             // Draw actual bar
             if (barHeight > 0f) {
                 drawRoundRect(
-                    color = primaryColor,
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            primaryColor,
+                            primaryColor.copy(alpha = 0.55f)
+                        ),
+                        startY = y,
+                        endY = y + barHeight
+                    ),
                     topLeft = Offset(x, y),
                     size = Size(barWidth, barHeight),
                     cornerRadius = CornerRadius(8.dp.toPx(), 8.dp.toPx())
@@ -301,7 +319,7 @@ fun UsageBarChart(
             )
 
             // Draw value on top of bar
-            val valueStr = String.format(Locale.getDefault(), "%.1fh", sotHours)
+            val valueStr = String.format(Locale.getDefault(), "%.1fsa", sotHours)
             val valueLayoutResult = textMeasurer.measure(
                 text = valueStr,
                 style = TextStyle(color = onSurface, fontSize = 9.sp)

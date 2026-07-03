@@ -41,7 +41,7 @@ fun AnalyticsChartsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var selectedTab by remember { mutableStateOf(0) } // 0 = Hourly, 1 = Daily, 2 = Weekly, 3 = Monthly
-    val tabLabels = listOf("Saatlik", "Günlük", "Haftalık", "Aylık")
+    val tabLabels = listOf("Saat", "Gün", "Hafta", "Ay")
 
     Box(
         modifier = modifier

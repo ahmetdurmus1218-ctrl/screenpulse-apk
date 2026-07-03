@@ -92,7 +92,7 @@ fun AppUsageScreen(
                         TextField(
                             value = searchQuery,
                             onValueChange = { viewModel.setSearchQuery(it) },
-                            placeholder = { Text("Yüklü uygulamalarda ara...") },
+                            placeholder = { Text("Uygulama ara...") },
                             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                             trailingIcon = {
                                 if (searchQuery.isNotEmpty()) {

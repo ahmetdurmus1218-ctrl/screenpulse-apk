@@ -56,11 +56,11 @@ class UsageRepository(
         val isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL
 
         val statusStr = when (status) {
-            BatteryManager.BATTERY_STATUS_CHARGING -> "Charging"
-            BatteryManager.BATTERY_STATUS_DISCHARGING -> "Discharging"
-            BatteryManager.BATTERY_STATUS_NOT_CHARGING -> "Not Charging"
-            BatteryManager.BATTERY_STATUS_FULL -> "Full"
-            else -> "Discharging"
+            BatteryManager.BATTERY_STATUS_CHARGING -> "Şarj Oluyor"
+            BatteryManager.BATTERY_STATUS_DISCHARGING -> "Boşalıyor"
+            BatteryManager.BATTERY_STATUS_NOT_CHARGING -> "Şarj Olmuyor"
+            BatteryManager.BATTERY_STATUS_FULL -> "Dolu"
+            else -> "Boşalıyor"
         }
 
         val voltage = (batteryStatusIntent?.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0) ?: 0) / 1000f
@@ -68,13 +68,13 @@ class UsageRepository(
 
         val health = batteryStatusIntent?.getIntExtra(BatteryManager.EXTRA_HEALTH, BatteryManager.BATTERY_HEALTH_UNKNOWN) ?: BatteryManager.BATTERY_HEALTH_UNKNOWN
         val healthStr = when (health) {
-            BatteryManager.BATTERY_HEALTH_GOOD -> "Good"
-            BatteryManager.BATTERY_HEALTH_OVERHEAT -> "Overheated"
-            BatteryManager.BATTERY_HEALTH_DEAD -> "Dead"
-            BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE -> "Over Voltage"
-            BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE -> "Failure"
-            BatteryManager.BATTERY_HEALTH_COLD -> "Cold"
-            else -> "Good" // Default to good if unknown but percentage is fine
+            BatteryManager.BATTERY_HEALTH_GOOD -> "İyi"
+            BatteryManager.BATTERY_HEALTH_OVERHEAT -> "Aşırı Isınmış"
+            BatteryManager.BATTERY_HEALTH_DEAD -> "Ölü"
+            BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE -> "Aşırı Voltaj"
+            BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE -> "Arızalı"
+            BatteryManager.BATTERY_HEALTH_COLD -> "Soğuk"
+            else -> "İyi" // Default to good if unknown but percentage is fine
         }
 
         val cycleCount = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
