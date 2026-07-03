@@ -37,7 +37,7 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: 8.13
+          gradle-version: 9.3.1
 
       - name: Create placeholder .env (Gemini key not used by this app)
         run: echo "GEMINI_API_KEY=unused" > .env
