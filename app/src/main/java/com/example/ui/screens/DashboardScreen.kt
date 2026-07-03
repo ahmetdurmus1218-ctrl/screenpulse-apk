@@ -47,7 +47,7 @@ fun DashboardScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFF0F131E)) // Görseldeki derin lacivert/siyah arka plan
+            .background(Color(0xFF0F131E))
     ) {
         when (val state = uiState) {
             is MainUiState.Loading -> {
@@ -64,7 +64,7 @@ fun DashboardScreen(
                             }
                             context.startActivity(intent)
                         } catch (e: Exception) {
-                            val intent = Intent(Settings.SETTINGS).apply {
+                            val intent = Intent(Settings.ACTION_SETTINGS).apply {
                                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
                             }
                             context.startActivity(intent)
@@ -151,7 +151,6 @@ fun DashboardContent(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(top = 24.dp, bottom = 96.dp)
     ) {
-        // ÜST BAŞLIK ALANI (ScreenPulse + Son Şarjdan Beri)
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -183,7 +182,6 @@ fun DashboardContent(
                     }
                 }
                 
-                // Yenile Butonu (Mockup'taki şık buton)
                 Box(
                     modifier = Modifier
                         .size(42.dp)
@@ -202,7 +200,6 @@ fun DashboardContent(
             }
         }
 
-        // 1:1 GÖRSELDEKİ BÜYÜK DAİRESEL HERO KART
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -226,7 +223,6 @@ fun DashboardContent(
                             modifier = Modifier.size(180.dp)
                         )
                         
-                        // Halkanın sol üstündeki minik dekoratif güneş
                         Icon(
                             imageVector = Icons.Outlined.WbSunny,
                             contentDescription = null,
@@ -254,7 +250,6 @@ fun DashboardContent(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Alt Yüzde ve Şarjdan Beri Bilgileri
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -272,13 +267,11 @@ fun DashboardContent(
             }
         }
 
-        // EKRAN KAPALI VE KİLİT AÇMA (YAN YANA KARTLAR)
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Ekran Kapalı Kartı
                 Card(
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(16.dp),
@@ -297,7 +290,6 @@ fun DashboardContent(
                     }
                 }
 
-                // Kilit Açma Kartı (Statik değer veya sistem verisi)
                 Card(
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(16.dp),
@@ -318,7 +310,6 @@ fun DashboardContent(
             }
         }
 
-        // EN ÇOK KULLANILAN UYGULAMALAR ÖNİZLEME PANELİ
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -334,11 +325,10 @@ fun DashboardContent(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     
-                    // Örnek Liste Görünümü (Mockup stili basitleştirilmiş satırlar)
-                    DummyAppRow("Claude", "56dk", "%30", Color(0xFFE67E22))
-                    DummyAppRow("YouTube", "22dk", "%12", Color(0xFFE74C3C))
-                    DummyAppRow("Chrome", "18dk", "%10", Color(0xFF3498DB))
-                    DummyAppRow("WhatsApp", "5dk", "%3", Color(0xFF2ECC71))
+                    DummyAppRow("Claude", "56dk", "%30", Icons.Default.Android)
+                    DummyAppRow("YouTube", "22dk", "%12", Icons.Default.PlayArrow)
+                    DummyAppRow("Chrome", "18dk", "%10", Icons.Default.Web)
+                    DummyAppRow("WhatsApp", "5dk", "%3", Icons.Default.QuestionAnswer)
 
                     Spacer(modifier = Modifier.height(8.dp))
                     
@@ -356,7 +346,6 @@ fun DashboardContent(
             }
         }
 
-        // PİL BİLGİSİ PANELİ (Görselin En Altındaki Tasarım)
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -376,7 +365,6 @@ fun DashboardContent(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Sol Devasa Yüzde Alanı
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                             Box(
                                 modifier = Modifier
@@ -391,7 +379,6 @@ fun DashboardContent(
                             Text(text = "%${state.batteryInfo.percentage}", fontSize = 28.sp, fontWeight = FontWeight.Black, color = Color.White)
                         }
 
-                        // Sağ Detay Matrisi
                         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             BatteryRow("Sıcaklık", String.format(Locale.getDefault(), "%.1f°C", state.batteryInfo.temperature))
                             BatteryRow("Voltaj", String.format(Locale.getDefault(), "%.2f V", state.batteryInfo.voltage))
@@ -405,12 +392,17 @@ fun DashboardContent(
 }
 
 @Composable
-fun DummyAppRow(name: String, time: String, percentage: String, iconColor: Color) {
+fun DummyAppRow(name: String, time: String, percentage: String, iconVector: ImageVector) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(modifier = Modifier.size(32.dp).clip(RoundedCornerShape(8.dp)).background(iconColor))
+        Box(
+            modifier = Modifier.size(32.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF171D2C)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(imageVector = iconVector, contentDescription = null, tint = Color(0xFF4C7CE5), modifier = Modifier.size(18.dp))
+        }
         Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(text = name, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
