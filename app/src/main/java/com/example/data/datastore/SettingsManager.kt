@@ -18,8 +18,10 @@ class SettingsManager(private val context: Context) {
     }
 
     val lastUnpluggedTime: Flow<Long> = context.dataStore.data.map { preferences ->
-        // Default to a reasonable value (e.g., 4 hours ago) if not set yet
-        preferences[KEY_LAST_UNPLUGGED_TIME] ?: (System.currentTimeMillis() - 4 * 3600 * 1000)
+        // 0L until a real value has been persisted (see initializeIfNeeded / triggerUnplugEvent).
+        // Previously this recomputed "now - 4h" on every read, which always evaluated to
+        // exactly 4 hours elapsed no matter when you checked it.
+        preferences[KEY_LAST_UNPLUGGED_TIME] ?: 0L
     }
 
     val lastUnpluggedBattery: Flow<Int> = context.dataStore.data.map { preferences ->
@@ -27,7 +29,26 @@ class SettingsManager(private val context: Context) {
     }
 
     val lastChargeTime: Flow<Long> = context.dataStore.data.map { preferences ->
-        preferences[KEY_LAST_CHARGE_TIME] ?: (System.currentTimeMillis() - 12 * 3600 * 1000)
+        preferences[KEY_LAST_CHARGE_TIME] ?: 0L
+    }
+
+    /**
+     * Ensures we always have a real, persisted baseline timestamp instead of a
+     * freshly-recomputed fake one. Call once at app startup. If this is the very
+     * first run (or the values were never set because no unplug/plug broadcast
+     * has fired yet), anchor both timestamps to "now" so elapsed-time math is
+     * honest (starts at 0 and actually counts up) rather than permanently frozen.
+     */
+    suspend fun initializeIfNeeded() {
+        context.dataStore.edit { preferences ->
+            val now = System.currentTimeMillis()
+            if (preferences[KEY_LAST_UNPLUGGED_TIME] == null) {
+                preferences[KEY_LAST_UNPLUGGED_TIME] = now
+            }
+            if (preferences[KEY_LAST_CHARGE_TIME] == null) {
+                preferences[KEY_LAST_CHARGE_TIME] = now
+            }
+        }
     }
 
     suspend fun saveUnpluggedState(timeMs: Long, batteryLevel: Int) {

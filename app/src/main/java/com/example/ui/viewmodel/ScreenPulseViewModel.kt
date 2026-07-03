@@ -49,8 +49,11 @@ class ScreenPulseViewModel(
     }
 
     init {
-        refreshStats()
-        startAutoRefresh()
+        viewModelScope.launch {
+            settingsManager.initializeIfNeeded()
+            refreshStats()
+            startAutoRefresh()
+        }
     }
 
     private fun startAutoRefresh() {
