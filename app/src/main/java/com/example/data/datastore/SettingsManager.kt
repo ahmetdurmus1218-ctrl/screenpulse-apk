@@ -16,6 +16,17 @@ class SettingsManager(private val context: Context) {
         private val KEY_LAST_UNPLUGGED_BATTERY = intPreferencesKey("last_unplugged_battery")
         private val KEY_LAST_CHARGE_TIME = longPreferencesKey("last_charge_time")
         private val KEY_DARK_THEME = booleanPreferencesKey("dark_theme")
+        private val KEY_WAS_CHARGING = booleanPreferencesKey("was_charging")
+    }
+
+    val wasCharging: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[KEY_WAS_CHARGING] ?: false
+    }
+
+    suspend fun setWasCharging(charging: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[KEY_WAS_CHARGING] = charging
+        }
     }
 
     val isDarkTheme: Flow<Boolean> = context.dataStore.data.map { preferences ->

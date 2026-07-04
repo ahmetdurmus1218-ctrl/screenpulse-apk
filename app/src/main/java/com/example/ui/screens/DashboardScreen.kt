@@ -522,8 +522,8 @@ fun GridBatteryMetrics(info: BatteryInfo) {
                 Icons.Outlined.Cached,
                 Modifier.weight(1f)
             )
-            val dateStr = if (info.lastChargeTimeMs > 0) {
-                SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(info.lastChargeTimeMs))
+            val dateStr = if (info.lastUnpluggedTimeMs > 0) {
+                SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(info.lastUnpluggedTimeMs))
             } else "Bilinmiyor"
             BatteryMetricItem("Fişten Çekilme", dateStr, Icons.Outlined.Power, Modifier.weight(1f))
         }

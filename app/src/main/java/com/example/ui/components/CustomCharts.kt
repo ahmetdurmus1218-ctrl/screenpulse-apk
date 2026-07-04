@@ -229,14 +229,24 @@ fun BatteryDrainChart(
             Offset(x, y)
         }
 
-        // Draw horizontal grid lines
-        for (i in 1..3) {
+        // Draw horizontal grid lines with percentage labels (100/75/50/25/0)
+        val textStyle = TextStyle(color = onSurface.copy(alpha = 0.55f), fontSize = 10.sp)
+        for (i in 0..4) {
             val gridY = height * (i / 4f)
-            drawLine(
-                color = onSurface.copy(alpha = 0.1f),
-                start = Offset(0f, gridY),
-                end = Offset(width, gridY),
-                strokeWidth = 1.dp.toPx()
+            if (i in 1..3) {
+                drawLine(
+                    color = onSurface.copy(alpha = 0.1f),
+                    start = Offset(0f, gridY),
+                    end = Offset(width, gridY),
+                    strokeWidth = 1.dp.toPx()
+                )
+            }
+            val pctLabel = "${100 - i * 25}%"
+            drawText(
+                textMeasurer = textMeasurer,
+                text = pctLabel,
+                topLeft = Offset(8.dp.toPx(), (gridY - 12.dp.toPx()).coerceIn(0f, height - 14.dp.toPx())),
+                style = textStyle
             )
         }
 
@@ -279,20 +289,23 @@ fun BatteryDrainChart(
             )
         }
 
-        // Draw Y Axis Labels
-        val textStyle = TextStyle(color = onSurface.copy(alpha = 0.5f), fontSize = 10.sp)
-        drawText(
-            textMeasurer = textMeasurer,
-            text = "100%",
-            topLeft = Offset(8.dp.toPx(), 4.dp.toPx()),
-            style = textStyle
-        )
-        drawText(
-            textMeasurer = textMeasurer,
-            text = "0%",
-            topLeft = Offset(8.dp.toPx(), height - 16.dp.toPx()),
-            style = textStyle
-        )
+        // Draw X Axis time labels (first, middle, last real log timestamps)
+        val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+        val xLabelStyle = TextStyle(color = onSurface.copy(alpha = 0.55f), fontSize = 10.sp)
+        val labelIndices = listOf(0, activeLogs.size / 2, activeLogs.size - 1).distinct()
+        labelIndices.forEach { idx ->
+            val log = activeLogs[idx]
+            val x = points[idx].x
+            val label = timeFormat.format(Date(log.timestamp))
+            val measured = textMeasurer.measure(label, xLabelStyle)
+            val labelX = (x - measured.size.width / 2f).coerceIn(0f, width - measured.size.width)
+            drawText(
+                textMeasurer = textMeasurer,
+                text = label,
+                topLeft = Offset(labelX, height - 14.dp.toPx()),
+                style = xLabelStyle
+            )
+        }
     }
 }
 

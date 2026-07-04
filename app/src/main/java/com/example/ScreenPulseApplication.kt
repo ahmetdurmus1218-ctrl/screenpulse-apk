@@ -23,5 +23,19 @@ class ScreenPulseApplication : Application() {
         val database = ScreenPulseDatabase.getDatabase(this)
         settingsManager = SettingsManager(this)
         repository = UsageRepository(this, database.usageDao(), settingsManager)
+
+        schedulePeriodicBatteryStateCheck()
+    }
+
+    private fun schedulePeriodicBatteryStateCheck() {
+        val request = androidx.work.PeriodicWorkRequestBuilder<com.example.worker.BatteryStateWorker>(
+            15, java.util.concurrent.TimeUnit.MINUTES
+        ).build()
+
+        androidx.work.WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "battery_state_check",
+            androidx.work.ExistingPeriodicWorkPolicy.KEEP,
+            request
+        )
     }
 }

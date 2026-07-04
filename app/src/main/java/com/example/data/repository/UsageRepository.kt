@@ -98,6 +98,7 @@ class UsageRepository(
         }
 
         val lastChargeTime = settingsManager.lastChargeTime.first()
+        val lastUnpluggedTime = settingsManager.lastUnpluggedTime.first()
 
         return BatteryInfo(
             percentage = percentage,
@@ -108,7 +109,8 @@ class UsageRepository(
             health = healthStr,
             cycleCount = cycleCount,
             batteryUsedSinceCharge = batteryUsedSinceCharge,
-            lastChargeTimeMs = lastChargeTime
+            lastChargeTimeMs = lastChargeTime,
+            lastUnpluggedTimeMs = lastUnpluggedTime
         )
     }
 

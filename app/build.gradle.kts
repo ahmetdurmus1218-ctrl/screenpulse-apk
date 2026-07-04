@@ -79,6 +79,7 @@ googleServices {
 // This makes it easy to add them back in the future if needed.
 dependencies {
   implementation("androidx.core:core-splashscreen:1.0.1")
+  implementation("androidx.work:work-runtime-ktx:2.9.1")
   implementation(platform(libs.androidx.compose.bom))
   implementation(platform(libs.firebase.bom))
   // implementation(libs.accompanist.permissions)
