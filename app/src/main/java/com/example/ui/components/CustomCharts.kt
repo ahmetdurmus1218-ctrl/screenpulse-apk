@@ -124,20 +124,20 @@ fun BatteryDrainChart(
     val onSurface = MaterialTheme.colorScheme.onSurface
     val textMeasurer = rememberTextMeasurer()
 
-    // Mock logs if there are fewer than 2 to render a line
-    val activeLogs = remember(logs) {
-        if (logs.size >= 2) {
-            logs
-        } else {
-            val now = System.currentTimeMillis()
-            listOf(
-                BatteryLogEntity(now - 12 * 3600 * 1000L, 100, false),
-                BatteryLogEntity(now - 8 * 3600 * 1000L, 85, false),
-                BatteryLogEntity(now - 4 * 3600 * 1000L, 60, false),
-                BatteryLogEntity(now, 45, false)
+    if (logs.size < 2) {
+        Box(modifier = modifier, contentAlignment = Alignment.Center) {
+            Text(
+                text = "Eğriyi çizmek için henüz yeterli pil verisi yok",
+                style = MaterialTheme.typography.bodyMedium,
+                color = onSurface.copy(alpha = 0.5f),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 24.dp)
             )
         }
+        return
     }
+
+    val activeLogs = logs
 
     Canvas(modifier = modifier) {
         val width = size.width
@@ -234,30 +234,21 @@ fun UsageBarChart(
     val onSurface = MaterialTheme.colorScheme.onSurface
     val textMeasurer = rememberTextMeasurer()
 
-    val displayHistory = remember(history) {
-        if (history.isNotEmpty()) {
-            history.takeLast(7)
-        } else {
-            // Generate clean mock days for visual previews
-            val sdf = SimpleDateFormat("EE", Locale.getDefault())
-            val list = mutableListOf<UsageHistoryEntity>()
-            for (i in 6 downTo 0) {
-                val cal = Calendar.getInstance()
-                cal.add(Calendar.DAY_OF_YEAR, -i)
-                val dayStr = sdf.format(cal.time)
-                list.add(
-                    UsageHistoryEntity(
-                        date = dayStr,
-                        screenOnTimeMs = (2..6).random() * 3600 * 1000L,
-                        screenOffTimeMs = 12 * 3600 * 1000L,
-                        batteryUsedPct = 30,
-                        totalTimeSinceChargeMs = 24 * 3600 * 1000L
-                    )
-                )
-            }
-            list
+    if (history.isEmpty()) {
+        Box(
+            modifier = modifier,
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Henüz veri yok",
+                style = MaterialTheme.typography.bodyMedium,
+                color = onSurface.copy(alpha = 0.5f)
+            )
         }
+        return
     }
+
+    val displayHistory = remember(history) { history.takeLast(7) }
 
     Canvas(modifier = modifier) {
         val width = size.width

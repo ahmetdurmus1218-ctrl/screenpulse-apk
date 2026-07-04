@@ -106,6 +106,20 @@ class UsageRepository(
         )
     }
 
+    /**
+     * Lightweight real screen-on-time sum for an arbitrary time window, using the same
+     * Android UsageStatsManager data as everything else (no icon/label loading overhead).
+     * Used to build genuinely accurate hourly buckets instead of splitting a daily total
+     * by a fixed made-up ratio.
+     */
+    fun getScreenOnTimeForRange(startTime: Long, endTime: Long): Long {
+        if (!hasUsageStatsPermission()) return 0L
+        if (endTime <= startTime) return 0L
+        val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        val stats = usageStatsManager.queryAndAggregateUsageStats(startTime, endTime)
+        return stats.values.sumOf { it.totalTimeInForeground }
+    }
+
     fun getAppUsageList(startTime: Long, endTime: Long = System.currentTimeMillis()): List<AppUsageItem> {
         if (!hasUsageStatsPermission()) return emptyList()
 

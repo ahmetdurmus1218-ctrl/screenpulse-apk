@@ -26,6 +26,7 @@ sealed interface MainUiState {
         val appUsageList: List<AppUsageItem>,
         val usageHistory: List<UsageHistoryEntity>,
         val batteryLogs: List<BatteryLogEntity>,
+        val hourlyBuckets: List<Long> = List(6) { 0L }, // real screen-on ms for each 4h block of today (00-04, 04-08, ... 20-24)
         val hasPermission: Boolean
     ) : MainUiState
 }
@@ -146,6 +147,20 @@ class ScreenPulseViewModel(
                 )
                 repository.saveUsageHistory(todayHistory)
 
+                // Real hourly buckets for today (00-04, 04-08, ... 20-24) — actual
+                // per-window UsageStatsManager queries, not a fixed made-up split.
+                val todayStart = Calendar.getInstance().apply {
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }.timeInMillis
+                val hourlyBuckets = (0 until 6).map { blockIndex ->
+                    val blockStart = todayStart + blockIndex * 4 * 3600 * 1000L
+                    val blockEnd = (blockStart + 4 * 3600 * 1000L).coerceAtMost(now)
+                    repository.getScreenOnTimeForRange(blockStart, blockEnd)
+                }
+
                 _uiState.value = MainUiState.Success(
                     batteryInfo = batteryInfo,
                     screenOnTimeMs = cleanScreenOn,
@@ -154,6 +169,7 @@ class ScreenPulseViewModel(
                     appUsageList = appUsages,
                     usageHistory = history.sortedBy { it.date },
                     batteryLogs = batteryLogs,
+                    hourlyBuckets = hourlyBuckets,
                     hasPermission = true
                 )
             } catch (e: Exception) {
@@ -190,7 +206,7 @@ class ScreenPulseViewModel(
                         date = dateStr,
                         screenOnTimeMs = daySot,
                         screenOffTimeMs = daySoff,
-                        batteryUsedPct = (15..45).random(), // Reasonable random battery usage
+                        batteryUsedPct = -1, // unknown: no real battery log exists for days before install
                         totalTimeSinceChargeMs = 24 * 3600 * 1000L
                     )
                     repository.saveUsageHistory(history)

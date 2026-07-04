@@ -139,7 +139,7 @@ fun AnalyticsChartsScreen(
 
                                     // Get filtered chart items based on tab
                                     val filteredHistory = remember(selectedTab, state.usageHistory) {
-                                        getChartDataForPeriod(selectedTab, state.usageHistory)
+                                        getChartDataForPeriod(selectedTab, state.usageHistory, state.hourlyBuckets)
                                     }
 
                                     UsageBarChart(
@@ -372,27 +372,24 @@ fun AppProgressRow(app: com.example.data.model.AppUsageItem) {
     }
 }
 
-fun getChartDataForPeriod(periodIndex: Int, history: List<UsageHistoryEntity>): List<UsageHistoryEntity> {
-    if (history.isEmpty()) return emptyList()
+fun getChartDataForPeriod(
+    periodIndex: Int,
+    history: List<UsageHistoryEntity>,
+    hourlyBuckets: List<Long> = List(6) { 0L }
+): List<UsageHistoryEntity> {
+    if (history.isEmpty() && periodIndex != 0) return emptyList()
     val sdfOutput = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
     return when (periodIndex) {
-        0 -> { // Hourly (mocking divisions of today's screen time since there is no native system hourly logger)
-            val nowStr = sdfOutput.format(Date())
-            val todayRecord = history.find { it.date == nowStr } ?: history.last()
-            val totalTodaySot = todayRecord.screenOnTimeMs
-            val totalTodaySoff = todayRecord.screenOffTimeMs
-            
-            // Build 6 segments representing blocks of hours
+        0 -> { // Hourly: real per-4h-window UsageStatsManager measurements for today
             val segments = listOf("00-04", "04-08", "08-12", "12-16", "16-20", "20-24")
             segments.mapIndexed { index, seg ->
-                // Distribute SOT into segment blocks
-                val blockSot = if (index < 4) (totalTodaySot * 0.15f).toLong() else (totalTodaySot * 0.20f).toLong()
+                val blockSot = hourlyBuckets.getOrElse(index) { 0L }
                 UsageHistoryEntity(
                     date = seg,
                     screenOnTimeMs = blockSot,
-                    screenOffTimeMs = totalTodaySoff / 6,
-                    batteryUsedPct = 5,
+                    screenOffTimeMs = (4 * 3600 * 1000L - blockSot).coerceAtLeast(0L),
+                    batteryUsedPct = -1, // not tracked at hourly resolution
                     totalTimeSinceChargeMs = 4 * 3600 * 1000L
                 )
             }
@@ -414,30 +411,29 @@ fun getChartDataForPeriod(periodIndex: Int, history: List<UsageHistoryEntity>): 
                 )
             }
         }
-        3 -> { // Monthly (show aggregate of months)
-            listOf(
-                UsageHistoryEntity(
-                    date = "May",
-                    screenOnTimeMs = (120 * 3600 * 1000L),
-                    screenOffTimeMs = (500 * 3600 * 1000L),
-                    batteryUsedPct = 1200,
-                    totalTimeSinceChargeMs = 30 * 24 * 3600 * 1000L
-                ),
-                UsageHistoryEntity(
-                    date = "Haz",
-                    screenOnTimeMs = (135 * 3600 * 1000L),
-                    screenOffTimeMs = (480 * 3600 * 1000L),
-                    batteryUsedPct = 1350,
-                    totalTimeSinceChargeMs = 30 * 24 * 3600 * 1000L
-                ),
-                UsageHistoryEntity(
-                    date = "Tem",
-                    screenOnTimeMs = (history.sumOf { it.screenOnTimeMs }).coerceAtLeast(100 * 3600 * 1000L),
-                    screenOffTimeMs = (history.sumOf { it.screenOffTimeMs }).coerceAtLeast(400 * 3600 * 1000L),
-                    batteryUsedPct = 1100,
-                    totalTimeSinceChargeMs = 30 * 24 * 3600 * 1000L
-                )
-            )
+        3 -> { // Monthly: real aggregation of actual stored daily records, grouped by calendar month
+            val monthKeyFormat = SimpleDateFormat("yyyy-MM", Locale.getDefault())
+            val monthLabelFormat = SimpleDateFormat("MMM", Locale("tr"))
+            val dayFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+
+            history
+                .mapNotNull { entry ->
+                    val date = try { dayFormat.parse(entry.date) } catch (e: Exception) { null }
+                    if (date != null) date to entry else null
+                }
+                .groupBy { (date, _) -> monthKeyFormat.format(date) }
+                .toSortedMap()
+                .map { (monthKey, entries) ->
+                    val label = entries.first().first.let { monthLabelFormat.format(it) }
+                        .replaceFirstChar { it.uppercase() }
+                    UsageHistoryEntity(
+                        date = label,
+                        screenOnTimeMs = entries.sumOf { it.second.screenOnTimeMs },
+                        screenOffTimeMs = entries.sumOf { it.second.screenOffTimeMs },
+                        batteryUsedPct = -1,
+                        totalTimeSinceChargeMs = entries.sumOf { it.second.totalTimeSinceChargeMs }
+                    )
+                }
         }
         else -> history
     }
