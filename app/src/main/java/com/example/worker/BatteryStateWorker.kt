@@ -7,6 +7,7 @@ import android.os.BatteryManager
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.ScreenPulseApplication
+import kotlinx.coroutines.flow.first
 
 /**
  * Runs periodically (every ~15 minutes, the platform-enforced minimum for periodic work)
@@ -46,9 +47,7 @@ class BatteryStateWorker(
             val scale = batteryStatusIntent?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
             val percentage = if (level >= 0 && scale > 0) (level * 100f / scale.toFloat()).toInt() else -1
 
-            val wasCharging = settingsManager.wasCharging.let { flow ->
-                kotlinx.coroutines.flow.first(flow)
-            }
+            val wasCharging = settingsManager.wasCharging.first()
 
             if (wasCharging && !isChargingNow && percentage >= 0) {
                 // Real unplug transition detected in the background.
