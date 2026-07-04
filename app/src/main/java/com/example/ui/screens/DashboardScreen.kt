@@ -166,6 +166,17 @@ fun DashboardContent(
     isDarkTheme: Boolean = true,
     onToggleTheme: () -> Unit = {}
 ) {
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { visible = true }
+
+    androidx.compose.animation.AnimatedVisibility(
+        visible = visible,
+        enter = androidx.compose.animation.fadeIn(animationSpec = androidx.compose.animation.core.tween(400)) +
+            androidx.compose.animation.slideInVertically(
+                animationSpec = androidx.compose.animation.core.tween(400),
+                initialOffsetY = { it / 10 }
+            )
+    ) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -535,6 +546,7 @@ fun DashboardContent(
                 }
             }
         }
+    }
     }
 }
 
