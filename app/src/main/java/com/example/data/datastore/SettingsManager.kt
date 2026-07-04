@@ -50,7 +50,7 @@ class SettingsManager(private val context: Context) {
      * has fired yet), anchor both timestamps to "now" so elapsed-time math is
      * honest (starts at 0 and actually counts up) rather than permanently frozen.
      */
-    suspend fun initializeIfNeeded() {
+    suspend fun initializeIfNeeded(currentBatteryLevel: Int) {
         context.dataStore.edit { preferences ->
             val now = System.currentTimeMillis()
             if (preferences[KEY_LAST_UNPLUGGED_TIME] == null) {
@@ -58,6 +58,12 @@ class SettingsManager(private val context: Context) {
             }
             if (preferences[KEY_LAST_CHARGE_TIME] == null) {
                 preferences[KEY_LAST_CHARGE_TIME] = now
+            }
+            if (preferences[KEY_LAST_UNPLUGGED_BATTERY] == null) {
+                // BUG FIX: this used to default to a hardcoded 100 forever (never actually
+                // set until a real unplug broadcast fired), so "battery used since charge"
+                // was really just "100 - current battery", not a real measurement.
+                preferences[KEY_LAST_UNPLUGGED_BATTERY] = currentBatteryLevel
             }
         }
     }

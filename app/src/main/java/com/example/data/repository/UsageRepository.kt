@@ -79,7 +79,11 @@ class UsageRepository(
 
         val cycleCount = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             val batteryManager = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
-            batteryManager.getIntProperty(4) // 4 is BATTERY_PROPERTY_CYCLE_COUNT
+            // BUG FIX: constant 4 is BATTERY_PROPERTY_CAPACITY (percentage, 0-100), NOT cycle
+            // count — that's why this used to show the same number as battery %. The real
+            // cycle-count property is BATTERY_PROPERTY_CYCLE_COUNT (value 6), API 34+.
+            val cycles = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CYCLE_COUNT)
+            if (cycles > 0) cycles else -1
         } else {
             -1
         }

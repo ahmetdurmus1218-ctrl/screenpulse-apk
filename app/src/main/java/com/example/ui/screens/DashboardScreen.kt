@@ -355,9 +355,9 @@ fun DashboardContent(
                         Spacer(modifier = Modifier.height(16.dp))
 
                         val topApps = state.appUsageList
-                            .sortedByDescending { it.todayUsageMs }
+                            .sortedByDescending { it.screenTimeSinceChargeMs }
                             .take(4)
-                        val maxUsage = topApps.maxOfOrNull { it.todayUsageMs }?.coerceAtLeast(1L) ?: 1L
+                        val maxUsage = topApps.maxOfOrNull { it.screenTimeSinceChargeMs }?.coerceAtLeast(1L) ?: 1L
 
                         topApps.forEachIndexed { index, app ->
                             Row(
@@ -407,7 +407,7 @@ fun DashboardContent(
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            text = formatTime(app.todayUsageMs),
+                                            text = formatTime(app.screenTimeSinceChargeMs),
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.primary
@@ -415,7 +415,7 @@ fun DashboardContent(
                                     }
                                     Spacer(modifier = Modifier.height(6.dp))
                                     LinearProgressIndicator(
-                                        progress = { (app.todayUsageMs.toFloat() / maxUsage.toFloat()).coerceIn(0.02f, 1f) },
+                                        progress = { (app.screenTimeSinceChargeMs.toFloat() / maxUsage.toFloat()).coerceIn(0.02f, 1f) },
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .height(6.dp)

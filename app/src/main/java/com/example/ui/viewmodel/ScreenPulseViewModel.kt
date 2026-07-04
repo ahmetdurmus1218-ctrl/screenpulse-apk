@@ -61,7 +61,8 @@ class ScreenPulseViewModel(
 
     init {
         viewModelScope.launch {
-            settingsManager.initializeIfNeeded()
+            val currentBattery = repository.getBatteryInfo().percentage
+            settingsManager.initializeIfNeeded(currentBattery)
             refreshStats()
             startAutoRefresh()
         }
