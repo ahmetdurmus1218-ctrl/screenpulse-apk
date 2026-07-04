@@ -4,29 +4,29 @@ Calculating task graph as no cached configuration is available for tasks: assemb
 > Task :app:generateDebugAssets UP-TO-DATE
 > Task :app:preDebugBuild UP-TO-DATE
 > Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
-> Task :app:generateDebugResources FROM-CACHE
 > Task :app:generateDebugBuildConfig FROM-CACHE
+> Task :app:generateDebugResources FROM-CACHE
 > Task :app:processDebugGoogleServices FROM-CACHE
 > Task :app:javaPreCompileDebug FROM-CACHE
 > Task :app:packageDebugResources FROM-CACHE
+> Task :app:processDebugNavigationResources FROM-CACHE
 > Task :app:mergeDebugAssets
 > Task :app:checkDebugDuplicateClasses
-> Task :app:compressDebugAssets FROM-CACHE
 > Task :app:desugarDebugFileDependencies FROM-CACHE
+> Task :app:compressDebugAssets FROM-CACHE
 > Task :app:mergeLibDexDebug FROM-CACHE
-> Task :app:processDebugNavigationResources FROM-CACHE
 > Task :app:parseDebugLocalResources FROM-CACHE
-> Task :app:checkDebugAarMetadata
 > Task :app:generateDebugRFile FROM-CACHE
 > Task :app:mapDebugSourceSetPaths
 > Task :app:compileDebugNavigationResources FROM-CACHE
+> Task :app:checkDebugAarMetadata
 > Task :app:createDebugCompatibleScreenManifests
 > Task :app:extractDeepLinksDebug FROM-CACHE
+> Task :app:mergeDebugResources FROM-CACHE
+> Task :app:mergeDebugJniLibFolders
 > Task :app:processDebugMainManifest FROM-CACHE
 > Task :app:processDebugManifest FROM-CACHE
 > Task :app:processDebugManifestForPackage FROM-CACHE
-> Task :app:mergeDebugJniLibFolders
-> Task :app:mergeDebugResources FROM-CACHE
 > Task :app:mergeDebugNativeLibs
 > Task :app:processDebugResources FROM-CACHE
 > Task :app:mergeExtDexDebug FROM-CACHE
@@ -53,8 +53,8 @@ w: file:///home/runner/work/screenpulse-apk/screenpulse-apk/app/src/main/java/co
 > Task :app:packageDebug
 > Task :app:assembleDebug
 > Task :app:createDebugApkListingFileRedirect
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1783172211128.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1783173615499.json
 
-BUILD SUCCESSFUL in 47s
+BUILD SUCCESSFUL in 49s
 39 actionable tasks: 20 executed, 19 from cache
 Configuration cache entry stored.
