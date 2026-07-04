@@ -67,7 +67,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Ekran Açık Süresi"
-                android:textColor="#7A97FF"
+                android:textColor="#2B66FF"
                 android:textSize="12sp"
                 android:textStyle="bold" />
 

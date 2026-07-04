@@ -55,7 +55,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:text="Şarj sonrası ekran açık süresi"
-            android:textColor="#7A97FF"
+            android:textColor="#2B66FF"
             android:textSize="11sp"
             android:textStyle="bold" />
 

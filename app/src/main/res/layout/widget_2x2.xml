@@ -52,7 +52,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="1dp"
             android:text="Ekran Açık"
-            android:textColor="#7A97FF"
+            android:textColor="#2B66FF"
             android:textSize="11sp"
             android:textStyle="bold" />
     </LinearLayout>
