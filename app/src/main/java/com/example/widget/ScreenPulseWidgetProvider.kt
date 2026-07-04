@@ -164,18 +164,18 @@ open class ScreenPulseWidgetProvider : AppWidgetProvider() {
         val total = (screenOnMs + screenOffMs).toFloat()
         val onPct = if (total > 0) screenOnMs / total else 0f
 
-        val strokeWidth = if (compact) 16f else 20f
+        val ringStrokeWidth = if (compact) 16f else 20f
         val paintTrack = Paint().apply {
             color = Color.parseColor("#336F98FF")
             style = Paint.Style.STROKE
-            strokeWidth = strokeWidth
+            strokeWidth = ringStrokeWidth
             strokeCap = Paint.Cap.ROUND
             isAntiAlias = true
         }
         val paintProgress = Paint().apply {
             color = Color.parseColor("#2B66FF")
             style = Paint.Style.STROKE
-            strokeWidth = strokeWidth
+            strokeWidth = ringStrokeWidth
             strokeCap = Paint.Cap.ROUND
             isAntiAlias = true
         }
@@ -187,7 +187,7 @@ open class ScreenPulseWidgetProvider : AppWidgetProvider() {
             isAntiAlias = true
         }
 
-        val pad = strokeWidth
+        val pad = ringStrokeWidth
         val rect = RectF(pad, pad, size - pad, size - pad)
         canvas.drawArc(rect, 0f, 360f, false, paintTrack)
         canvas.drawArc(rect, -90f, 360f * onPct, false, paintProgress)
