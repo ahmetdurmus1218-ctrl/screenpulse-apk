@@ -4,36 +4,36 @@ Calculating task graph as no cached configuration is available for tasks: assemb
 > Task :app:preBuild UP-TO-DATE
 > Task :app:preDebugBuild UP-TO-DATE
 > Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
-> Task :app:generateDebugBuildConfig FROM-CACHE
 > Task :app:generateDebugResources FROM-CACHE
 > Task :app:processDebugGoogleServices FROM-CACHE
+> Task :app:generateDebugBuildConfig FROM-CACHE
 > Task :app:javaPreCompileDebug FROM-CACHE
 > Task :app:packageDebugResources FROM-CACHE
 > Task :app:processDebugNavigationResources FROM-CACHE
-> Task :app:mergeDebugAssets
 > Task :app:checkDebugDuplicateClasses
-> Task :app:compressDebugAssets FROM-CACHE
+> Task :app:mergeDebugAssets
 > Task :app:desugarDebugFileDependencies FROM-CACHE
+> Task :app:compressDebugAssets FROM-CACHE
 > Task :app:mergeLibDexDebug FROM-CACHE
 > Task :app:parseDebugLocalResources FROM-CACHE
 > Task :app:generateDebugRFile FROM-CACHE
 > Task :app:mapDebugSourceSetPaths
 > Task :app:compileDebugNavigationResources FROM-CACHE
 > Task :app:checkDebugAarMetadata
-> Task :app:createDebugCompatibleScreenManifests
-> Task :app:extractDeepLinksDebug FROM-CACHE
 > Task :app:mergeDebugResources FROM-CACHE
+> Task :app:extractDeepLinksDebug FROM-CACHE
+> Task :app:createDebugCompatibleScreenManifests
 > Task :app:mergeDebugJniLibFolders
 > Task :app:processDebugMainManifest FROM-CACHE
 > Task :app:processDebugManifest FROM-CACHE
-> Task :app:mergeDebugNativeLibs
 > Task :app:processDebugManifestForPackage FROM-CACHE
+> Task :app:mergeDebugNativeLibs
 > Task :app:mergeExtDexDebug FROM-CACHE
-> Task :app:validateSigningDebug
-> Task :app:writeDebugAppMetadata
-> Task :app:writeDebugSigningConfigVersions
 > Task :app:stripDebugDebugSymbols
+> Task :app:writeDebugAppMetadata
 > Task :app:processDebugResources FROM-CACHE
+> Task :app:writeDebugSigningConfigVersions
+> Task :app:validateSigningDebug
 > Task :app:kspDebugKotlin
 
 > Task :app:compileDebugKotlin
@@ -52,8 +52,8 @@ w: file:///home/runner/work/screenpulse-apk/screenpulse-apk/app/src/main/java/co
 > Task :app:packageDebug
 > Task :app:assembleDebug
 > Task :app:createDebugApkListingFileRedirect
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1783112180262.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1783129398285.json
 
-BUILD SUCCESSFUL in 49s
+BUILD SUCCESSFUL in 44s
 39 actionable tasks: 20 executed, 19 from cache
 Configuration cache entry stored.
