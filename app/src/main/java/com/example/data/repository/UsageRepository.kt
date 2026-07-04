@@ -152,6 +152,88 @@ class UsageRepository(
         return stats.values.sumOf { it.totalTimeInForeground }
     }
 
+    /**
+     * Real screen ON/OFF durations for a time range, derived from Android's own
+     * SCREEN_INTERACTIVE / SCREEN_NON_INTERACTIVE usage events (system-maintained,
+     * works even if the app wasn't running). This replaces summing per-app
+     * foreground time, which can overcount (apps' reported foreground windows can
+     * overlap in Android's usage stats) — that overcounting is exactly why
+     * "Ekran Kapalı Süresi" could get stuck near 0 even after a screen-off day:
+     * the inflated "on" sum was hitting the elapsed-time cap every time.
+     */
+    fun getScreenOnOffFromEvents(startTime: Long, endTime: Long): Pair<Long, Long> {
+        if (!hasUsageStatsPermission() || endTime <= startTime) {
+            return 0L to 0L
+        }
+        val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        val events = usageStatsManager.queryEvents(startTime, endTime)
+        val event = android.app.usage.UsageEvents.Event()
+
+        var onMs = 0L
+        var offMs = 0L
+        var cursor = startTime
+        var screenOnNow: Boolean? = null // unknown until the first event tells us
+
+        while (events.hasNextEvent()) {
+            events.getNextEvent(event)
+            val ts = event.timeStamp.coerceIn(startTime, endTime)
+            when (event.eventType) {
+                15 -> { // UsageEvents.Event.SCREEN_INTERACTIVE
+                    if (screenOnNow == null) {
+                        // Screen was OFF from range-start until this ON event.
+                        offMs += (ts - cursor).coerceAtLeast(0L)
+                    } else if (screenOnNow == false) {
+                        offMs += (ts - cursor).coerceAtLeast(0L)
+                    }
+                    cursor = ts
+                    screenOnNow = true
+                }
+                16 -> { // UsageEvents.Event.SCREEN_NON_INTERACTIVE
+                    if (screenOnNow == null) {
+                        // Screen was ON from range-start until this OFF event.
+                        onMs += (ts - cursor).coerceAtLeast(0L)
+                    } else if (screenOnNow == true) {
+                        onMs += (ts - cursor).coerceAtLeast(0L)
+                    }
+                    cursor = ts
+                    screenOnNow = false
+                }
+            }
+        }
+
+        // Tail: whatever the last known state was, it continued until endTime.
+        when (screenOnNow) {
+            true -> onMs += (endTime - cursor).coerceAtLeast(0L)
+            false -> offMs += (endTime - cursor).coerceAtLeast(0L)
+            null -> {
+                // No screen events at all in range (e.g. very short range) —
+                // fall back to treating it as ON, since that's the far more common case.
+                onMs += (endTime - cursor).coerceAtLeast(0L)
+            }
+        }
+
+        return onMs to offMs
+    }
+
+    /**
+     * Same charging-transition detection as BatteryStateWorker, but callable directly
+     * from the app (ViewModel) so that while the app is open, transitions are caught
+     * within seconds instead of waiting for the next 15-minute background work run.
+     * The worker remains the safety net for when the app isn't open at all.
+     */
+    suspend fun checkAndUpdateChargeTransition() {
+        val info = getBatteryInfo()
+        val wasCharging = settingsManager.wasCharging.first()
+        val isChargingNow = info.isCharging
+
+        if (wasCharging && !isChargingNow) {
+            settingsManager.saveUnpluggedState(System.currentTimeMillis(), info.percentage)
+        } else if (!wasCharging && isChargingNow) {
+            settingsManager.saveLastChargeTime(System.currentTimeMillis())
+        }
+        settingsManager.setWasCharging(isChargingNow)
+    }
+
     fun getAppUsageList(startTime: Long, endTime: Long = System.currentTimeMillis()): List<AppUsageItem> {
         if (!hasUsageStatsPermission()) return emptyList()
 

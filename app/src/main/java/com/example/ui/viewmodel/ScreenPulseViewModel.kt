@@ -111,6 +111,11 @@ class ScreenPulseViewModel(
                 // Populate history from past days if first run and empty
                 populateHistoryIfEmpty()
 
+                // Catch up on any charge/unplug transition immediately (don't wait for the
+                // 15-minute background worker) — this is what makes "Pil Tüketimi" feel
+                // live whenever the app is open.
+                repository.checkAndUpdateChargeTransition()
+
                 // Save current battery state to log
                 repository.logCurrentBatteryState()
 
@@ -121,15 +126,16 @@ class ScreenPulseViewModel(
                 val timeSinceCharge = now - lastUnpluggedTime
                 val cleanTimeSinceCharge = if (timeSinceCharge > 0) timeSinceCharge else 4 * 3600 * 1000L
 
-                // Get app usages since unplugged
+                // Get app usages since unplugged (for the per-app breakdown / Apps screen)
                 val rawAppUsages = repository.getAppUsageList(lastUnpluggedTime, now)
-                
-                // Calculate total screen-on time
-                val screenOnTime = rawAppUsages.sumOf { it.screenTimeSinceChargeMs }
-                
-                // Cap screen-on time to cleanTimeSinceCharge
-                val cleanScreenOn = if (screenOnTime > cleanTimeSinceCharge) cleanTimeSinceCharge else screenOnTime
-                val cleanScreenOff = cleanTimeSinceCharge - cleanScreenOn
+
+                // Real screen on/off split, from Android's own screen-interactive events —
+                // NOT a sum of per-app foreground time, which can overcount (apps' reported
+                // foreground windows can overlap) and used to make "Ekran Kapalı Süresi"
+                // look stuck near zero even after a screen-off day.
+                val (realScreenOn, realScreenOff) = repository.getScreenOnOffFromEvents(lastUnpluggedTime, now)
+                val cleanScreenOn = if (realScreenOn > cleanTimeSinceCharge) cleanTimeSinceCharge else realScreenOn
+                val cleanScreenOff = (cleanTimeSinceCharge - cleanScreenOn).coerceAtLeast(0L)
 
                 // Filter app usages based on search and sort
                 val appUsages = rawAppUsages
@@ -201,10 +207,10 @@ class ScreenPulseViewModel(
                 val dayEnd = dayStart + 24 * 3600 * 1000L - 1000L
                 val dateStr = dateFormat.format(cal.time)
 
-                // Get app usage for this past day
-                val pastApps = repository.getAppUsageList(dayStart, dayEnd)
-                val daySot = pastApps.sumOf { it.screenTimeSinceChargeMs }
-                val daySoff = (24 * 3600 * 1000L) - daySot
+                // Real screen on/off for this past day, from actual screen-interactive events
+                // (not a per-app foreground sum, which can overcount and make "off" time
+                // look like it never accumulates).
+                val (daySot, daySoff) = repository.getScreenOnOffFromEvents(dayStart, dayEnd)
 
                 if (daySot > 0) {
                     val history = UsageHistoryEntity(
