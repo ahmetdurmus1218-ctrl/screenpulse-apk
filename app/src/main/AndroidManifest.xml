@@ -68,6 +68,30 @@
                 android:resource="@xml/widget_info_4x4" />
         </receiver>
 
+        <receiver
+            android:name=".widget.ScreenPulseWidgetProvider2x4"
+            android:exported="true"
+            android:label="ScreenPulse 2x4">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info_2x4" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.ScreenPulseWidgetProvider1x4"
+            android:exported="true"
+            android:label="ScreenPulse 1x4">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info_1x4" />
+        </receiver>
+
     </application>
 
 </manifest>

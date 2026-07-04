@@ -78,14 +78,23 @@ class UsageRepository(
         }
 
         val cycleCount = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            val batteryManager = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
-            // BUG FIX: constant 4 is BATTERY_PROPERTY_CAPACITY (percentage, 0-100), NOT cycle
-            // count — that's why this used to show the same number as battery %. The real
-            // cycle-count property value is 6 (BatteryManager.BATTERY_PROPERTY_CYCLE_COUNT,
-            // API 34+; the named constant isn't exposed in this compileSdk's stub, so we use
-            // the documented raw value directly).
-            val cycles = batteryManager.getIntProperty(6)
-            if (cycles > 0) cycles else -1
+            try {
+                val batteryManager = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
+                // BUG FIX: constant 4 is BATTERY_PROPERTY_CAPACITY (percentage, 0-100), NOT cycle
+                // count — that's why this used to show the same number as battery %. The real
+                // cycle-count property value is 6 (BatteryManager.BATTERY_PROPERTY_CYCLE_COUNT,
+                // API 34+; the named constant isn't exposed in this compileSdk's stub, so we use
+                // the documented raw value directly).
+                // Android returns Integer.MIN_VALUE (a large negative number) when a property
+                // isn't supported — 0 is a legitimate value (brand-new battery), so only treat
+                // negative results as "unsupported", not "zero or less".
+                val cycles = batteryManager.getIntProperty(6)
+                if (cycles >= 0) cycles else -1
+            } catch (e: Exception) {
+                // Some OEMs/kernels throw instead of returning a sentinel for
+                // unsupported properties — treat that the same as "not supported".
+                -1
+            }
         } else {
             -1
         }

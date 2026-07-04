@@ -32,18 +32,22 @@ open class ScreenPulseWidgetProvider : AppWidgetProvider() {
 
         scope.launch {
             try {
+                // Catch up on any missed charge/unplug transition, same as the app does.
+                repository.checkAndUpdateChargeTransition()
+
                 // Fetch real telemetry
                 val batteryInfo = repository.getBatteryInfo()
                 val lastUnpluggedTime = settingsManager.lastUnpluggedTime.first()
                 val now = System.currentTimeMillis()
 
-                val rawAppUsages = repository.getAppUsageList(lastUnpluggedTime, now)
-                val screenOnMs = rawAppUsages.sumOf { it.screenTimeSinceChargeMs }
+                // Real screen on/off split, same accurate source used by the app itself —
+                // NOT a sum of per-app foreground time (which can overcount).
+                val (realScreenOn, realScreenOff) = repository.getScreenOnOffFromEvents(lastUnpluggedTime, now)
 
                 val timeSinceCharge = now - lastUnpluggedTime
                 val cleanTimeSinceCharge = if (timeSinceCharge > 0) timeSinceCharge else 4 * 3600 * 1000L
-                val cleanScreenOn = if (screenOnMs > cleanTimeSinceCharge) cleanTimeSinceCharge else screenOnMs
-                val cleanScreenOff = cleanTimeSinceCharge - cleanScreenOn
+                val cleanScreenOn = if (realScreenOn > cleanTimeSinceCharge) cleanTimeSinceCharge else realScreenOn
+                val cleanScreenOff = (cleanTimeSinceCharge - cleanScreenOn).coerceAtLeast(0L)
 
                 appWidgetIds.forEach { widgetId ->
                     val views = resolveWidgetView(
@@ -95,6 +99,23 @@ open class ScreenPulseWidgetProvider : AppWidgetProvider() {
         }
 
         return when {
+            minWidth < 100 && minHeight >= 200 -> {
+                // 1x4 Widget (narrow, tall)
+                RemoteViews(context.packageName, R.layout.widget_1x4).apply {
+                    setTextViewText(R.id.widget_battery, "%${batteryInfo.percentage}")
+                    setTextViewText(R.id.widget_sot_value, sotStr)
+                    val ring = drawScreenTimeRing(sotStr, screenOnMs, screenOffMs, compact = true)
+                    setImageViewBitmap(R.id.widget_sot_ring, ring)
+                }
+            }
+            minWidth < 200 && minHeight >= 200 -> {
+                // 2x4 Widget (medium width, tall)
+                RemoteViews(context.packageName, R.layout.widget_2x4).apply {
+                    setTextViewText(R.id.widget_battery, "%${batteryInfo.percentage}")
+                    val ring = drawScreenTimeRing(sotStr, screenOnMs, screenOffMs, compact = false)
+                    setImageViewBitmap(R.id.widget_sot_ring, ring)
+                }
+            }
             minWidth >= 200 && minHeight >= 200 -> {
                 // 4x4 Widget
                 RemoteViews(context.packageName, R.layout.widget_4x4).apply {
@@ -132,6 +153,56 @@ open class ScreenPulseWidgetProvider : AppWidgetProvider() {
                 }
             }
         }
+    }
+
+    /** Ring bitmap showing the screen-on/off proportion, matching the app's own ring styling. */
+    private fun drawScreenTimeRing(valueLabel: String, screenOnMs: Long, screenOffMs: Long, compact: Boolean): Bitmap {
+        val size = 200
+        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+
+        val total = (screenOnMs + screenOffMs).toFloat()
+        val onPct = if (total > 0) screenOnMs / total else 0f
+
+        val strokeWidth = if (compact) 16f else 20f
+        val paintTrack = Paint().apply {
+            color = Color.parseColor("#336F98FF")
+            style = Paint.Style.STROKE
+            strokeWidth = strokeWidth
+            strokeCap = Paint.Cap.ROUND
+            isAntiAlias = true
+        }
+        val paintProgress = Paint().apply {
+            color = Color.parseColor("#2B66FF")
+            style = Paint.Style.STROKE
+            strokeWidth = strokeWidth
+            strokeCap = Paint.Cap.ROUND
+            isAntiAlias = true
+        }
+        val paintText = Paint().apply {
+            color = Color.WHITE
+            textSize = if (compact) 28f else 34f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            textAlign = Paint.Align.CENTER
+            isAntiAlias = true
+        }
+
+        val pad = strokeWidth
+        val rect = RectF(pad, pad, size - pad, size - pad)
+        canvas.drawArc(rect, 0f, 360f, false, paintTrack)
+        canvas.drawArc(rect, -90f, 360f * onPct, false, paintProgress)
+
+        // Wrap "3sa 18dk" onto two lines if needed
+        val parts = valueLabel.split(" ")
+        if (parts.size == 2) {
+            canvas.drawText(parts[0], size / 2f, size / 2f - 6f, paintText)
+            val paintText2 = Paint(paintText).apply { textSize = paintText.textSize * 0.7f }
+            canvas.drawText(parts[1], size / 2f, size / 2f + 22f, paintText2)
+        } else {
+            canvas.drawText(valueLabel, size / 2f, size / 2f + 10f, paintText)
+        }
+
+        return bitmap
     }
 
     private fun drawCircularBattery(percentage: Int, isCharging: Boolean): Bitmap {
@@ -202,3 +273,5 @@ open class ScreenPulseWidgetProvider : AppWidgetProvider() {
 class ScreenPulseWidgetProvider2x2 : ScreenPulseWidgetProvider()
 class ScreenPulseWidgetProvider4x2 : ScreenPulseWidgetProvider()
 class ScreenPulseWidgetProvider4x4 : ScreenPulseWidgetProvider()
+class ScreenPulseWidgetProvider2x4 : ScreenPulseWidgetProvider()
+class ScreenPulseWidgetProvider1x4 : ScreenPulseWidgetProvider()
