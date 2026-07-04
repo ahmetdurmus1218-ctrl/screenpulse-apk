@@ -1,12 +1,12 @@
 Starting a Gradle Daemon (subsequent builds will be faster)
 Calculating task graph as no cached configuration is available for tasks: assembleDebug
-> Task :app:preBuild UP-TO-DATE
 > Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:preBuild UP-TO-DATE
 > Task :app:preDebugBuild UP-TO-DATE
 > Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:processDebugGoogleServices FROM-CACHE
 > Task :app:generateDebugResources FROM-CACHE
 > Task :app:generateDebugBuildConfig FROM-CACHE
-> Task :app:processDebugGoogleServices FROM-CACHE
 > Task :app:javaPreCompileDebug FROM-CACHE
 > Task :app:packageDebugResources FROM-CACHE
 > Task :app:processDebugNavigationResources FROM-CACHE
@@ -43,7 +43,7 @@ w: file:///home/runner/work/screenpulse-apk/screenpulse-apk/app/src/main/java/co
 w: file:///home/runner/work/screenpulse-apk/screenpulse-apk/app/src/main/java/com/example/ui/screens/AnalyticsChartsScreen.kt:434:60 'constructor(p0: String!): Locale' is deprecated. Deprecated in Java.
 w: file:///home/runner/work/screenpulse-apk/screenpulse-apk/app/src/main/java/com/example/ui/screens/AppUsageScreen.kt:272:21 'fun Divider(modifier: Modifier = ..., thickness: Dp = ..., color: Color = ...): Unit' is deprecated. Renamed to HorizontalDivider.
 w: file:///home/runner/work/screenpulse-apk/screenpulse-apk/app/src/main/java/com/example/ui/screens/DashboardScreen.kt:152:53 'val Icons.Filled.OpenInNew: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.OpenInNew.
-w: file:///home/runner/work/screenpulse-apk/screenpulse-apk/app/src/main/java/com/example/ui/screens/DashboardScreen.kt:548:39 'val Icons.Outlined.TrendingDown: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.TrendingDown.
+w: file:///home/runner/work/screenpulse-apk/screenpulse-apk/app/src/main/java/com/example/ui/screens/DashboardScreen.kt:560:39 'val Icons.Outlined.TrendingDown: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.TrendingDown.
 
 > Task :app:processDebugJavaRes
 > Task :app:mergeDebugJavaResource
@@ -53,8 +53,8 @@ w: file:///home/runner/work/screenpulse-apk/screenpulse-apk/app/src/main/java/co
 > Task :app:packageDebug
 > Task :app:assembleDebug
 > Task :app:createDebugApkListingFileRedirect
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1783132377110.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1783132940101.json
 
-BUILD SUCCESSFUL in 46s
+BUILD SUCCESSFUL in 47s
 39 actionable tasks: 20 executed, 19 from cache
 Configuration cache entry stored.
