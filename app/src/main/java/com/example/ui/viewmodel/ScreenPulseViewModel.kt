@@ -27,6 +27,7 @@ sealed interface MainUiState {
         val usageHistory: List<UsageHistoryEntity>,
         val batteryLogs: List<BatteryLogEntity>,
         val hourlyBuckets: List<Long> = List(6) { 0L }, // real screen-on ms for each 4h block of today (00-04, 04-08, ... 20-24)
+        val unlockCount: Int = 0,
         val hasPermission: Boolean
     ) : MainUiState
 }
@@ -161,6 +162,8 @@ class ScreenPulseViewModel(
                     repository.getScreenOnTimeForRange(blockStart, blockEnd)
                 }
 
+                val unlockCount = repository.getUnlockCount(lastUnpluggedTime, now)
+
                 _uiState.value = MainUiState.Success(
                     batteryInfo = batteryInfo,
                     screenOnTimeMs = cleanScreenOn,
@@ -170,6 +173,7 @@ class ScreenPulseViewModel(
                     usageHistory = history.sortedBy { it.date },
                     batteryLogs = batteryLogs,
                     hourlyBuckets = hourlyBuckets,
+                    unlockCount = unlockCount,
                     hasPermission = true
                 )
             } catch (e: Exception) {

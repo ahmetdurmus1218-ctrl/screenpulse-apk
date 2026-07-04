@@ -118,7 +118,7 @@ fun AppUsageScreen(
                             FilledIconButton(
                                 onClick = { showSortMenu = true },
                                 modifier = Modifier.size(56.dp),
-                                shape = RoundedCornerShape(16.dp),
+                                shape = RoundedCornerShape(28.dp),
                                 colors = IconButtonDefaults.filledIconButtonColors(
                                     containerColor = MaterialTheme.colorScheme.secondaryContainer
                                 )

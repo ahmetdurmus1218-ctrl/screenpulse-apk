@@ -2,6 +2,7 @@ package com.example.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -91,7 +92,7 @@ fun AnalyticsChartsScreen(
                         item {
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(24.dp),
+                                shape = RoundedCornerShape(32.dp),
                                 colors = CardDefaults.cardColors(
                                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                                 ),
@@ -114,24 +115,41 @@ fun AnalyticsChartsScreen(
 
                                     Spacer(modifier = Modifier.height(16.dp))
 
-                                    // Tab Row
-                                    TabRow(
-                                        selectedTabIndex = selectedTab,
-                                        containerColor = Color.Transparent,
-                                        divider = {},
-                                        indicator = { tabPositions ->
-                                            TabRowDefaults.SecondaryIndicator(
-                                                modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                                                color = MaterialTheme.colorScheme.primary
-                                            )
-                                        }
+                                    // Segmented pill control with a glowing selected state
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(20.dp))
+                                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                                            .padding(4.dp),
+                                        horizontalArrangement = Arrangement.SpaceEvenly
                                     ) {
                                         tabLabels.forEachIndexed { index, label ->
-                                            Tab(
-                                                selected = selectedTab == index,
-                                                onClick = { selectedTab = index },
-                                                text = { Text(label, fontWeight = FontWeight.SemiBold) }
+                                            val selected = selectedTab == index
+                                            val bgColor by androidx.compose.animation.animateColorAsState(
+                                                targetValue = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                                label = "tabBg"
                                             )
+                                            val textColor by androidx.compose.animation.animateColorAsState(
+                                                targetValue = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                label = "tabText"
+                                            )
+                                            Box(
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .clip(RoundedCornerShape(16.dp))
+                                                    .background(bgColor)
+                                                    .clickable { selectedTab = index }
+                                                    .padding(vertical = 10.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(
+                                                    text = label,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 13.sp,
+                                                    color = textColor
+                                                )
+                                            }
                                         }
                                     }
 
@@ -156,7 +174,7 @@ fun AnalyticsChartsScreen(
                         item {
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(24.dp),
+                                shape = RoundedCornerShape(32.dp),
                                 colors = CardDefaults.cardColors(
                                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                                 ),
@@ -193,7 +211,7 @@ fun AnalyticsChartsScreen(
                         item {
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(24.dp),
+                                shape = RoundedCornerShape(32.dp),
                                 colors = CardDefaults.cardColors(
                                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                                 ),
@@ -254,7 +272,7 @@ fun AnalyticsChartsScreen(
                         item {
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(24.dp),
+                                shape = RoundedCornerShape(32.dp),
                                 colors = CardDefaults.cardColors(
                                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                                 ),

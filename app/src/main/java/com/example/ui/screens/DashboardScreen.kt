@@ -144,7 +144,7 @@ fun PermissionOnboarding(
 
                 Button(
                     onClick = onRequestPermission,
-                    shape = RoundedCornerShape(20.dp),
+                    shape = RoundedCornerShape(32.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp)
@@ -321,14 +321,15 @@ fun DashboardContent(
                     value = formatTime(state.screenOffTimeMs),
                     icon = Icons.Outlined.VisibilityOff,
                     modifier = Modifier.weight(1f),
-                    accentColor = Color(0xFF8AB4F8)
+                    accentColor = Color(0xFF7A97FF)
                 )
                 StatCard(
-                    title = "Bekleme Süresi",
-                    value = formatTime(state.timeSinceLastChargeMs),
-                    icon = Icons.Outlined.Timer,
+                    title = "Kilit Açma",
+                    value = "${state.unlockCount}",
+                    subtitle = "Açılış",
+                    icon = Icons.Outlined.LockOpen,
                     modifier = Modifier.weight(1f),
-                    accentColor = Color(0xFFFFB74D)
+                    accentColor = Color(0xFFFFC857)
                 )
             }
         }
@@ -338,7 +339,7 @@ fun DashboardContent(
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
+                    shape = RoundedCornerShape(32.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
                     ),
@@ -452,7 +453,7 @@ fun DashboardContent(
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
+                shape = RoundedCornerShape(32.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
                 ),
@@ -639,11 +640,12 @@ fun StatCard(
     value: String,
     icon: ImageVector,
     modifier: Modifier = Modifier,
-    accentColor: Color = Color(0xFF8AB4F8)
+    accentColor: Color = Color(0xFF8AB4F8),
+    subtitle: String? = null
 ) {
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(32.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
         ),
@@ -672,12 +674,23 @@ fun StatCard(
                 fontWeight = FontWeight.Medium
             )
             Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                if (subtitle != null) {
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 2.dp)
+                    )
+                }
+            }
         }
     }
 }

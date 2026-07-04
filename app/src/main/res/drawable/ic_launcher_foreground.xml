@@ -19,16 +19,16 @@
                 android:startY="58"
                 android:endX="84"
                 android:endY="58">
-                <item android:color="#8AB4F8" android:offset="0.0" />
+                <item android:color="#7A97FF" android:offset="0.0" />
                 <item android:color="#FFFFFF" android:offset="0.5" />
-                <item android:color="#8AB4F8" android:offset="1.0" />
+                <item android:color="#7A97FF" android:offset="1.0" />
             </gradient>
         </aapt:attr>
     </path>
     <!-- Small end dots for a polished, deliberate finish -->
     <path
         android:pathData="M24,58 m-3,0 a3,3 0,1,1 6,0 a3,3 0,1,1 -6,0"
-        android:fillColor="#8AB4F8" />
+        android:fillColor="#7A97FF" />
     <path
         android:pathData="M84,58 m-3,0 a3,3 0,1,1 6,0 a3,3 0,1,1 -6,0"
         android:fillColor="#FFFFFF" />

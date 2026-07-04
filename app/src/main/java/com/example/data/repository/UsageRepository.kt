@@ -112,6 +112,30 @@ class UsageRepository(
      * Used to build genuinely accurate hourly buckets instead of splitting a daily total
      * by a fixed made-up ratio.
      */
+    /**
+     * Real unlock count since a given time, read from Android's own historical usage
+     * events log (UsageEvents.Event type 18 = KEYGUARD_HIDDEN, i.e. the lock screen was
+     * dismissed). This is system-maintained data — no broadcast receiver or service needed,
+     * and no extra permission beyond the usage-access permission we already require.
+     * Returns 0 on API < 28 or if usage access isn't granted (the event type doesn't exist
+     * on older Android versions, so it will naturally just never match).
+     */
+    fun getUnlockCount(startTime: Long, endTime: Long): Int {
+        if (!hasUsageStatsPermission()) return 0
+        if (endTime <= startTime) return 0
+        val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        val events = usageStatsManager.queryEvents(startTime, endTime)
+        var count = 0
+        val event = android.app.usage.UsageEvents.Event()
+        while (events.hasNextEvent()) {
+            events.getNextEvent(event)
+            if (event.eventType == 18) { // UsageEvents.Event.KEYGUARD_HIDDEN
+                count++
+            }
+        }
+        return count
+    }
+
     fun getScreenOnTimeForRange(startTime: Long, endTime: Long): Long {
         if (!hasUsageStatsPermission()) return 0L
         if (endTime <= startTime) return 0L
