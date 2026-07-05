@@ -28,7 +28,7 @@
             android:textStyle="bold" />
     </LinearLayout>
 
-    <Space android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
+    <View android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
 
     <TextView
         android:id="@+id/widget_sot_value"
@@ -47,7 +47,7 @@
         android:textSize="11sp"
         android:textStyle="bold" />
 
-    <Space android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
+    <View android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
 
     <View
         android:layout_width="match_parent"
