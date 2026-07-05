@@ -56,7 +56,8 @@ open class ScreenPulseWidgetProvider : AppWidgetProvider() {
                         appWidgetManager = appWidgetManager,
                         batteryInfo = batteryInfo,
                         screenOnMs = cleanScreenOn,
-                        screenOffMs = cleanScreenOff
+                        screenOffMs = cleanScreenOff,
+                        timeSinceChargeMs = cleanTimeSinceCharge
                     )
 
                     // Add PendingIntent to open App on click
@@ -83,7 +84,8 @@ open class ScreenPulseWidgetProvider : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         batteryInfo: BatteryInfo,
         screenOnMs: Long,
-        screenOffMs: Long
+        screenOffMs: Long,
+        timeSinceChargeMs: Long
     ): RemoteViews {
         // Query options to determine if we are 2x2, 4x2, or 4x4
         val options = appWidgetManager.getAppWidgetOptions(widgetId)
@@ -92,28 +94,32 @@ open class ScreenPulseWidgetProvider : AppWidgetProvider() {
 
         val sotStr = formatWidgetTime(screenOnMs)
         val soffStr = formatWidgetTime(screenOffMs)
+        val sinceChargeStr = formatWidgetTime(timeSinceChargeMs)
         val lastChargeStr = if (batteryInfo.lastChargeTimeMs > 0) {
             "Şarj: " + SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date(batteryInfo.lastChargeTimeMs))
         } else {
             "Şarj: Bilinmiyor"
         }
 
+        val batteryIconBitmap = drawMiniBatteryIcon(batteryInfo.percentage, batteryInfo.isCharging)
+
         return when {
             minWidth < 100 && minHeight >= 200 -> {
-                // 1x4 Widget (narrow, tall)
+                // 1x4 Widget (narrow, tall): ring, then %+battery icon, then bolt+since-charge
                 RemoteViews(context.packageName, R.layout.widget_1x4).apply {
                     setTextViewText(R.id.widget_battery, "%${batteryInfo.percentage}")
-                    setTextViewText(R.id.widget_sot_value, sotStr)
+                    setImageViewBitmap(R.id.widget_battery_icon, batteryIconBitmap)
+                    setTextViewText(R.id.widget_sot_value, sinceChargeStr)
                     val ring = drawScreenTimeRing(sotStr, screenOnMs, screenOffMs, compact = true)
                     setImageViewBitmap(R.id.widget_sot_ring, ring)
                 }
             }
             minWidth < 200 && minHeight >= 200 -> {
-                // 2x4 Widget (medium width, tall)
+                // 2x4 Widget (medium width, tall): header, big SOT number, %+battery icon
                 RemoteViews(context.packageName, R.layout.widget_2x4).apply {
+                    setTextViewText(R.id.widget_sot_value, sotStr)
                     setTextViewText(R.id.widget_battery, "%${batteryInfo.percentage}")
-                    val ring = drawScreenTimeRing(sotStr, screenOnMs, screenOffMs, compact = false)
-                    setImageViewBitmap(R.id.widget_sot_ring, ring)
+                    setImageViewBitmap(R.id.widget_battery_icon, batteryIconBitmap)
                 }
             }
             minWidth >= 200 && minHeight >= 200 -> {
@@ -136,26 +142,72 @@ open class ScreenPulseWidgetProvider : AppWidgetProvider() {
                 }
             }
             minWidth >= 200 -> {
-                // 4x2 Widget
+                // 4x2 Widget: ring on the left, %+Şarjdan Beri stacked on the right
                 RemoteViews(context.packageName, R.layout.widget_4x2).apply {
-                    setTextViewText(R.id.widget_sot_value, sotStr)
-                    setTextViewText(R.id.widget_last_charge_time, lastChargeStr)
-                    // Draw circular battery bitmap
-                    val bitmap = drawCircularBattery(batteryInfo.percentage, batteryInfo.isCharging)
-                    setImageViewBitmap(R.id.widget_battery_circle, bitmap)
+                    setTextViewText(R.id.widget_battery, "%${batteryInfo.percentage}")
+                    setTextViewText(R.id.widget_sot_value, sinceChargeStr)
+                    setImageViewBitmap(R.id.widget_battery_icon, batteryIconBitmap)
+                    val ring = drawScreenTimeRing(sotStr, screenOnMs, screenOffMs, compact = false)
+                    setImageViewBitmap(R.id.widget_sot_ring, ring)
                 }
             }
             else -> {
-                // 2x2 Widget
+                // 2x2 Widget: ring, then %+battery icon
                 RemoteViews(context.packageName, R.layout.widget_2x2).apply {
-                    setTextViewText(R.id.widget_sot_value, sotStr)
-                    setTextViewText(R.id.widget_battery, "Pil: ${batteryInfo.percentage}%")
+                    setTextViewText(R.id.widget_battery, "%${batteryInfo.percentage}")
+                    setImageViewBitmap(R.id.widget_battery_icon, batteryIconBitmap)
+                    val ring = drawScreenTimeRing(sotStr, screenOnMs, screenOffMs, compact = true)
+                    setImageViewBitmap(R.id.widget_sot_ring, ring)
                 }
             }
         }
     }
 
     /** Ring bitmap showing the screen-on/off proportion, matching the app's own ring styling. */
+    /** Small horizontal battery pill icon (outline + green fill + nub), matching the reference exactly. */
+    private fun drawMiniBatteryIcon(percentage: Int, isCharging: Boolean): Bitmap {
+        val w = 120
+        val h = 60
+        val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+
+        val bodyRight = w - 14f
+        val nubWidth = 10f
+        val nubHeight = h * 0.4f
+        val strokeW = 5f
+
+        val outlinePaint = Paint().apply {
+            color = Color.parseColor("#66FFFFFF")
+            style = Paint.Style.STROKE
+            strokeWidth = strokeW
+            isAntiAlias = true
+        }
+        val bodyRect = RectF(strokeW / 2, strokeW / 2, bodyRight, h - strokeW / 2)
+        canvas.drawRoundRect(bodyRect, 10f, 10f, outlinePaint)
+
+        val nubPaint = Paint().apply {
+            color = Color.parseColor("#66FFFFFF")
+            style = Paint.Style.FILL
+            isAntiAlias = true
+        }
+        val nubRect = RectF(bodyRight, (h - nubHeight) / 2f, bodyRight + nubWidth, (h + nubHeight) / 2f)
+        canvas.drawRoundRect(nubRect, 4f, 4f, nubPaint)
+
+        val fillColor = if (isCharging) Color.parseColor("#FFC857") else Color.parseColor("#00C853")
+        val fillPaint = Paint().apply {
+            color = fillColor
+            style = Paint.Style.FILL
+            isAntiAlias = true
+        }
+        val inset = strokeW + 4f
+        val maxFillWidth = bodyRight - inset * 2
+        val fillWidth = (maxFillWidth * (percentage.coerceIn(0, 100) / 100f)).coerceAtLeast(6f)
+        val fillRect = RectF(inset, inset, inset + fillWidth, h - inset)
+        canvas.drawRoundRect(fillRect, 6f, 6f, fillPaint)
+
+        return bitmap
+    }
+
     private fun drawScreenTimeRing(valueLabel: String, screenOnMs: Long, screenOffMs: Long, compact: Boolean): Bitmap {
         val size = 200
         val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)

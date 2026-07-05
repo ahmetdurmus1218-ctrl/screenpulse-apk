@@ -1,71 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"
-    android:padding="16dp">
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:gravity="center_horizontal">
+
+    <Space android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
+
+    <ImageView
+        android:id="@+id/widget_sot_ring"
+        android:layout_width="96dp"
+        android:layout_height="96dp"
+        android:scaleType="fitCenter" />
+
+    <Space android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true">
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/widget_battery"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="%55"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
         <ImageView
-            android:layout_width="14dp"
-            android:layout_height="14dp"
-            android:src="@drawable/ic_widget_pulse" />
-
-        <TextView
-            android:id="@+id/widget_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="5dp"
-            android:text="ScreenPulse"
-            android:textColor="#99AAB8E8"
-            android:textSize="11sp"
-            android:textStyle="bold" />
+            android:id="@+id/widget_battery_icon"
+            android:layout_width="20dp"
+            android:layout_height="10dp"
+            android:layout_marginStart="6dp" />
     </LinearLayout>
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_centerInParent="true"
-        android:gravity="center">
-
-        <TextView
-            android:id="@+id/widget_sot_value"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="0sa 0dk"
-            android:textColor="#FFFFFF"
-            android:textSize="28sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/widget_sot_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="1dp"
-            android:text="Ekran Açık"
-            android:textColor="#2B66FF"
-            android:textSize="11sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/widget_battery"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Pil: 100%"
-        android:textColor="#7CE0A6"
-        android:textSize="11sp"
-        android:textStyle="bold"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true" />
-
-</RelativeLayout>
+</LinearLayout>

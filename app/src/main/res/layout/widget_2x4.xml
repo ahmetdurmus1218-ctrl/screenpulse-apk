@@ -5,20 +5,18 @@
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"
     android:orientation="vertical"
-    android:padding="18dp"
-    android:gravity="center_horizontal">
+    android:padding="18dp">
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_gravity="start">
+        android:gravity="center_vertical">
 
         <ImageView
-            android:layout_width="13dp"
-            android:layout_height="13dp"
-            android:src="@drawable/ic_widget_pulse" />
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:src="@drawable/ic_widget_sun" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -30,21 +28,26 @@
             android:textStyle="bold" />
     </LinearLayout>
 
-    <Space
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
+    <Space android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
 
-    <ImageView
-        android:id="@+id/widget_sot_ring"
-        android:layout_width="104dp"
-        android:layout_height="104dp"
-        android:scaleType="fitCenter" />
+    <TextView
+        android:id="@+id/widget_sot_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="3sa 18dk"
+        android:textColor="#FFFFFF"
+        android:textSize="30sp"
+        android:textStyle="bold" />
 
-    <Space
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Ekran Açık Süresi"
+        android:textColor="#7A97FF"
+        android:textSize="11sp"
+        android:textStyle="bold" />
+
+    <Space android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
 
     <View
         android:layout_width="match_parent"
@@ -52,14 +55,27 @@
         android:background="#14FFFFFF"
         android:layout_marginBottom="12dp" />
 
-    <TextView
-        android:id="@+id/widget_battery"
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="%55"
-        android:textColor="#FFFFFF"
-        android:textSize="20sp"
-        android:textStyle="bold" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/widget_battery"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="%55"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/widget_battery_icon"
+            android:layout_width="20dp"
+            android:layout_height="10dp"
+            android:layout_marginStart="6dp" />
+    </LinearLayout>
 
     <TextView
         android:layout_width="wrap_content"
@@ -67,6 +83,6 @@
         android:text="Pil Seviyesi"
         android:textColor="#66FFFFFF"
         android:textSize="10sp"
-        android:layout_marginBottom="6dp" />
+        android:layout_marginBottom="4dp" />
 
 </LinearLayout>
