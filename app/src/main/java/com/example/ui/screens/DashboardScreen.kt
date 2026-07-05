@@ -518,7 +518,11 @@ fun GridBatteryMetrics(info: BatteryInfo) {
         Row(modifier = Modifier.fillMaxWidth()) {
             BatteryMetricItem(
                 "Şarj Döngüsü",
-                if (info.cycleCount >= 0) "${info.cycleCount}" else "Desteklenmiyor",
+                when {
+                    info.cycleCount < 0 -> "Bekleniyor"
+                    info.cycleCountIsEstimate -> "~${info.cycleCount}"
+                    else -> "${info.cycleCount}"
+                },
                 Icons.Outlined.Cached,
                 Modifier.weight(1f)
             )

@@ -99,6 +99,18 @@ class UsageRepository(
             -1
         }
 
+        // Fallback for devices/Android versions without the real hardware cycle counter:
+        // estimate cycles from cumulative % charged across real charging sessions we've
+        // observed (same method apps like AccuBattery use). Marked distinctly from the
+        // real hardware value so the UI can note it's an estimate.
+        val cycleCountIsEstimate = cycleCount < 0
+        val finalCycleCount = if (cycleCount >= 0) {
+            cycleCount
+        } else {
+            val cumulative = settingsManager.cumulativeChargePercent.first()
+            if (cumulative > 0f) (cumulative / 100f).toInt() else -1
+        }
+
         val lastUnpluggedBatteryLevel = settingsManager.lastUnpluggedBattery.first()
         val batteryUsedSinceCharge = if (lastUnpluggedBatteryLevel > percentage) {
             lastUnpluggedBatteryLevel - percentage
@@ -116,7 +128,8 @@ class UsageRepository(
             voltage = voltage,
             temperature = temperature,
             health = healthStr,
-            cycleCount = cycleCount,
+            cycleCount = finalCycleCount,
+            cycleCountIsEstimate = cycleCountIsEstimate,
             batteryUsedSinceCharge = batteryUsedSinceCharge,
             lastChargeTimeMs = lastChargeTime,
             lastUnpluggedTimeMs = lastUnpluggedTime
@@ -237,8 +250,10 @@ class UsageRepository(
 
         if (wasCharging && !isChargingNow) {
             settingsManager.saveUnpluggedState(System.currentTimeMillis(), info.percentage)
+            settingsManager.onChargingSessionEnd(info.percentage)
         } else if (!wasCharging && isChargingNow) {
             settingsManager.saveLastChargeTime(System.currentTimeMillis())
+            settingsManager.onChargingSessionStart(info.percentage)
         }
         settingsManager.setWasCharging(isChargingNow)
     }

@@ -52,9 +52,11 @@ class BatteryStateWorker(
             if (wasCharging && !isChargingNow && percentage >= 0) {
                 // Real unplug transition detected in the background.
                 settingsManager.saveUnpluggedState(System.currentTimeMillis(), percentage)
+                settingsManager.onChargingSessionEnd(percentage)
             } else if (!wasCharging && isChargingNow) {
                 // Real plug-in transition detected in the background.
                 settingsManager.saveLastChargeTime(System.currentTimeMillis())
+                settingsManager.onChargingSessionStart(percentage)
             }
 
             settingsManager.setWasCharging(isChargingNow)

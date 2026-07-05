@@ -17,6 +17,36 @@ class SettingsManager(private val context: Context) {
         private val KEY_LAST_CHARGE_TIME = longPreferencesKey("last_charge_time")
         private val KEY_DARK_THEME = booleanPreferencesKey("dark_theme")
         private val KEY_WAS_CHARGING = booleanPreferencesKey("was_charging")
+        private val KEY_CHARGE_SESSION_START_LEVEL = intPreferencesKey("charge_session_start_level")
+        private val KEY_CUMULATIVE_CHARGE_PERCENT = floatPreferencesKey("cumulative_charge_percent")
+    }
+
+    /**
+     * Running total of "% points charged" across every real charging session this app has
+     * observed. Dividing by 100 gives an estimated cycle count (one full cycle = the
+     * equivalent of charging 0%→100% once, possibly spread across many partial sessions),
+     * for devices/Android versions that don't expose the real hardware cycle counter.
+     */
+    val cumulativeChargePercent: Flow<Float> = context.dataStore.data.map { preferences ->
+        preferences[KEY_CUMULATIVE_CHARGE_PERCENT] ?: 0f
+    }
+
+    suspend fun onChargingSessionStart(batteryLevel: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[KEY_CHARGE_SESSION_START_LEVEL] = batteryLevel
+        }
+    }
+
+    suspend fun onChargingSessionEnd(batteryLevelNow: Int) {
+        context.dataStore.edit { preferences ->
+            val startLevel = preferences[KEY_CHARGE_SESSION_START_LEVEL]
+            if (startLevel != null && batteryLevelNow > startLevel) {
+                val gained = (batteryLevelNow - startLevel).toFloat()
+                val current = preferences[KEY_CUMULATIVE_CHARGE_PERCENT] ?: 0f
+                preferences[KEY_CUMULATIVE_CHARGE_PERCENT] = current + gained
+            }
+            preferences.remove(KEY_CHARGE_SESSION_START_LEVEL)
+        }
     }
 
     val wasCharging: Flow<Boolean> = context.dataStore.data.map { preferences ->
