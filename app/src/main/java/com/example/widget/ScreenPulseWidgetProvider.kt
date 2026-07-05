@@ -7,6 +7,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.graphics.*
+import android.os.Bundle
 import android.widget.RemoteViews
 import com.example.MainActivity
 import com.example.R
@@ -26,6 +27,13 @@ open class ScreenPulseWidgetProvider : AppWidgetProvider() {
     private val scope = CoroutineScope(Dispatchers.Main + job)
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
+        // CRITICAL FIX: without goAsync(), Android is free to kill this process the moment
+        // onUpdate() returns — but all our work below (DataStore reads, Room DB, UsageStats
+        // queries) happens asynchronously in a coroutine that hadn't necessarily finished yet.
+        // That's why widgets could silently never update: the process could be torn down
+        // mid-flight before appWidgetManager.updateAppWidget() ever got called.
+        val pendingResult = goAsync()
+
         val app = context.applicationContext as ScreenPulseApplication
         val repository = app.repository
         val settingsManager = app.settingsManager
@@ -74,6 +82,8 @@ open class ScreenPulseWidgetProvider : AppWidgetProvider() {
                 }
             } catch (e: Exception) {
                 // Prevent widget crashing
+            } finally {
+                pendingResult.finish()
             }
         }
     }
@@ -314,6 +324,16 @@ open class ScreenPulseWidgetProvider : AppWidgetProvider() {
         } else {
             "${minutes}dk"
         }
+    }
+
+    override fun onAppWidgetOptionsChanged(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int,
+        newOptions: Bundle
+    ) {
+        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
+        onUpdate(context, appWidgetManager, intArrayOf(appWidgetId))
     }
 
     override fun onDisabled(context: Context?) {
