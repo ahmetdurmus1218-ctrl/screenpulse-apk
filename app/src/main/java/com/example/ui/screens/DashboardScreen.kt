@@ -179,6 +179,7 @@ fun DashboardContent(
             contentPadding = PaddingValues(top = 24.dp, bottom = 96.dp)
         ) {
             item { DashboardHeader(isDarkTheme, onToggleTheme, onRefresh) }
+            item { WidgetDiagnosticBanner() }
             item { HeroRingCard(state) }
             item { TwoStatCardsRow(state) }
             if (state.appUsageList.isNotEmpty()) {
@@ -882,5 +883,40 @@ private fun MiniBatteryIcon(percentage: Int, small: Boolean = false) {
             size = Size((bodyRight - 4f) * (percentage / 100f), size.height - 4f),
             cornerRadius = CornerRadius(1f, 1f)
         )
+    }
+}
+
+/**
+ * Temporary diagnostic banner: shows the last widget update error (if any) directly
+ * inside the app, so problems can be reported without needing a computer or adb.
+ * Reads from the same SharedPreferences the widget provider writes to on failure.
+ */
+@Composable
+private fun WidgetDiagnosticBanner() {
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("widget_diag", android.content.Context.MODE_PRIVATE) }
+    val lastError = remember { prefs.getString("last_error", null) }
+
+    if (!lastError.isNullOrBlank()) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF2A1414))
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    "Widget güncellemesi hata verdi:",
+                    color = Color(0xFFFF8A80),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp
+                )
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    lastError.take(500),
+                    color = Color.White.copy(alpha = 0.85f),
+                    fontSize = 11.sp
+                )
+            }
+        }
     }
 }

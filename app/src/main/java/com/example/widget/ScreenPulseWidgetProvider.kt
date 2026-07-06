@@ -80,8 +80,20 @@ open class ScreenPulseWidgetProvider : AppWidgetProvider() {
 
                     appWidgetManager.updateAppWidget(widgetId, views)
                 }
+                // Success — clear any previously recorded error so the app doesn't show stale info.
+                context.getSharedPreferences("widget_diag", Context.MODE_PRIVATE).edit()
+                    .putString("last_error", null)
+                    .putLong("last_success_ts", System.currentTimeMillis())
+                    .apply()
             } catch (e: Exception) {
-                // Prevent widget crashing
+                // Prevent widget crashing, but record what happened so it can be viewed
+                // from inside the app itself (no computer/adb needed to diagnose).
+                val sw = java.io.StringWriter()
+                e.printStackTrace(java.io.PrintWriter(sw))
+                context.getSharedPreferences("widget_diag", Context.MODE_PRIVATE).edit()
+                    .putString("last_error", sw.toString().take(2000))
+                    .putLong("last_error_ts", System.currentTimeMillis())
+                    .apply()
             } finally {
                 pendingResult.finish()
             }
