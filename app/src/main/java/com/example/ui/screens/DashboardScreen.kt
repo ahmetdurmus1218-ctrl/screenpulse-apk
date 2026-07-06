@@ -4,8 +4,10 @@ import android.content.Intent
 import android.provider.Settings
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,6 +22,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -177,6 +184,7 @@ fun DashboardContent(
                 item { MostUsedAppsCard(state, onNavigateToApps) }
             }
             item { BatteryInfoCard(state, onRefresh) }
+            item { WidgetPreviewsSection(state) }
         }
     }
 }
@@ -438,52 +446,140 @@ private fun BatteryInfoCard(state: MainUiState.Success, onRefresh: () -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(38.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(imageVector = Icons.Outlined.BatteryStd, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text("Pil Bilgisi", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-            }
+            Text("Pil Bilgisi", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
             IconButton(onClick = onRefresh) {
                 Icon(imageVector = Icons.Default.Refresh, contentDescription = "Yenile")
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(18.dp))
 
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
-            Text(
-                text = "${state.batteryInfo.percentage}%",
-                style = MaterialTheme.typography.displayMedium,
-                fontWeight = FontWeight.Black,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Box(
-                modifier = Modifier
-                    .padding(bottom = 8.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(if (state.batteryInfo.isCharging) Color(0xFF1B4332) else MaterialTheme.colorScheme.surfaceVariant)
-                    .padding(horizontal = 12.dp, vertical = 6.dp)
+        Row(modifier = Modifier.fillMaxWidth()) {
+            // Left: vertical battery illustration + big percentage
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = state.batteryInfo.chargingStatus,
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = if (state.batteryInfo.isCharging) Color(0xFF7CE0A6) else MaterialTheme.colorScheme.onSurfaceVariant
+                VerticalBatteryIcon(
+                    percentage = state.batteryInfo.percentage,
+                    isCharging = state.batteryInfo.isCharging,
+                    modifier = Modifier.size(width = 26.dp, height = 46.dp)
                 )
+                Spacer(modifier = Modifier.width(14.dp))
+                Column {
+                    Text(
+                        text = "${state.batteryInfo.percentage}%",
+                        style = MaterialTheme.typography.displaySmall,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = state.batteryInfo.chargingStatus,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            VerticalDivider(
+                modifier = Modifier.height(72.dp).padding(horizontal = 8.dp),
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+            )
+
+            // Right: compact 3-row info list
+            Column(
+                modifier = Modifier.weight(1f).padding(start = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                CompactStatRow("Sıcaklık", String.format(Locale.getDefault(), "%.1f°C", state.batteryInfo.temperature))
+                CompactStatRow("Voltaj", String.format(Locale.getDefault(), "%.2f V", state.batteryInfo.voltage))
+                CompactStatRow("Pil Sağlığı", state.batteryInfo.health)
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(18.dp))
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
         Spacer(modifier = Modifier.height(16.dp))
 
-        GridBatteryMetrics(state.batteryInfo)
+        // Secondary metrics not shown in the compact summary above
+        Row(modifier = Modifier.fillMaxWidth()) {
+            BatteryMetricItem(
+                "Pil Tüketimi",
+                "${state.batteryInfo.batteryUsedSinceCharge}%",
+                Icons.Outlined.TrendingDown,
+                Modifier.weight(1f)
+            )
+            BatteryMetricItem(
+                "Şarj Döngüsü",
+                when {
+                    state.batteryInfo.cycleCount < 0 -> "Bekleniyor"
+                    state.batteryInfo.cycleCountIsEstimate -> "~${state.batteryInfo.cycleCount}"
+                    else -> "${state.batteryInfo.cycleCount}"
+                },
+                Icons.Outlined.Cached,
+                Modifier.weight(1f)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Row(modifier = Modifier.fillMaxWidth()) {
+            val dateStr = if (state.batteryInfo.lastUnpluggedTimeMs > 0) {
+                SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(state.batteryInfo.lastUnpluggedTimeMs))
+            } else "Bilinmiyor"
+            BatteryMetricItem("Fişten Çekilme", dateStr, Icons.Outlined.Power, Modifier.weight(1f))
+            Spacer(modifier = Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+private fun CompactStatRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+    }
+}
+
+/** Realistic vertical battery illustration that fills proportionally to charge level. */
+@Composable
+private fun VerticalBatteryIcon(percentage: Int, isCharging: Boolean, modifier: Modifier = Modifier) {
+    val fillColor = if (isCharging) Color(0xFFFFC857) else Color(0xFF00C853)
+    Canvas(modifier = modifier) {
+        val capHeight = size.height * 0.08f
+        val bodyTop = capHeight
+        val bodyHeight = size.height - capHeight
+        val cornerRadius = CornerRadius(size.width * 0.25f, size.width * 0.25f)
+
+        // Cap (the little nub on top)
+        drawRoundRect(
+            color = Color.White.copy(alpha = 0.6f),
+            topLeft = Offset(size.width * 0.3f, 0f),
+            size = Size(size.width * 0.4f, capHeight + 2f),
+            cornerRadius = CornerRadius(2f, 2f)
+        )
+
+        // Outline
+        drawRoundRect(
+            color = Color.White.copy(alpha = 0.5f),
+            topLeft = Offset(0f, bodyTop),
+            size = Size(size.width, bodyHeight),
+            cornerRadius = cornerRadius,
+            style = Stroke(width = 2.5f)
+        )
+
+        // Fill, from the bottom up
+        val inset = 4f
+        val fillHeight = (bodyHeight - inset * 2) * (percentage.coerceIn(0, 100) / 100f)
+        drawRoundRect(
+            color = fillColor,
+            topLeft = Offset(inset, bodyTop + bodyHeight - inset - fillHeight),
+            size = Size(size.width - inset * 2, fillHeight.coerceAtLeast(4f)),
+            cornerRadius = CornerRadius(size.width * 0.18f, size.width * 0.18f)
+        )
     }
 }
 
@@ -593,4 +689,197 @@ fun formatTime(timeMs: Long): String {
     val hours = totalMinutes / 60
     val minutes = totalMinutes % 60
     return if (hours > 0) "${hours}sa ${minutes}dk" else "${minutes}dk"
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// In-app "Widget Örnekleri" preview panel — shows what the real home-screen
+// widgets look like, using the same live data as the rest of the app.
+// These are plain Compose mockups for preview purposes, not the actual
+// AppWidget RemoteViews (those live in com.example.widget).
+// ─────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun WidgetPreviewsSection(state: MainUiState.Success) {
+    Column {
+        Text(
+            text = "Widget Örnekleri",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(start = 4.dp, bottom = 12.dp)
+        )
+
+        androidx.compose.foundation.lazy.LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            contentPadding = PaddingValues(horizontal = 4.dp)
+        ) {
+            item {
+                WidgetPreviewFrame(label = "4x2 Widget", width = 220.dp, height = 110.dp) {
+                    Row(
+                        modifier = Modifier.fillMaxSize().padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(Icons.Outlined.WbSunny, null, tint = Color(0xFFFFC857), modifier = Modifier.align(Alignment.Start).size(14.dp))
+                            MiniRing(state, size = 62.dp)
+                        }
+                        Column(horizontalAlignment = Alignment.End, modifier = Modifier.padding(start = 8.dp)) {
+                            Text("%${state.batteryInfo.percentage}", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                            Text("Pil Seviyesi", color = Color.White.copy(alpha = 0.5f), fontSize = 8.sp)
+                            Spacer(Modifier.height(8.dp))
+                            Text(formatTime(state.timeSinceLastChargeMs), color = Color(0xFF7A97FF), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            Text("Şarjdan Beri", color = Color.White.copy(alpha = 0.5f), fontSize = 8.sp)
+                        }
+                    }
+                }
+            }
+            item {
+                WidgetPreviewFrame(label = "2x2 Widget", width = 130.dp, height = 130.dp) {
+                    Column(
+                        modifier = Modifier.fillMaxSize().padding(10.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        MiniRing(state, size = 66.dp)
+                        Spacer(Modifier.height(8.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("%${state.batteryInfo.percentage}", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Spacer(Modifier.width(4.dp))
+                            MiniBatteryIcon(state.batteryInfo.percentage)
+                        }
+                    }
+                }
+            }
+            item {
+                WidgetPreviewFrame(label = "2x4 Widget", width = 130.dp, height = 220.dp) {
+                    Column(modifier = Modifier.fillMaxSize().padding(14.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Outlined.WbSunny, null, tint = Color(0xFFFFC857), modifier = Modifier.size(12.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("Son Şarjdan Beri", color = Color.White.copy(alpha = 0.6f), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(Modifier.weight(1f))
+                        Text(formatTime(state.screenOnTimeMs), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text("Ekran Açık Süresi", color = Color(0xFF7A97FF), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.weight(1f))
+                        HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+                        Spacer(Modifier.height(10.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("%${state.batteryInfo.percentage}", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Spacer(Modifier.width(4.dp))
+                            MiniBatteryIcon(state.batteryInfo.percentage)
+                        }
+                        Text("Pil Seviyesi", color = Color.White.copy(alpha = 0.5f), fontSize = 8.sp)
+                    }
+                }
+            }
+            item {
+                WidgetPreviewFrame(label = "1x4 Widget", width = 88.dp, height = 220.dp) {
+                    Column(
+                        modifier = Modifier.fillMaxSize().padding(8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Spacer(Modifier.weight(1f))
+                        MiniRing(state, size = 48.dp)
+                        Spacer(Modifier.height(8.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("%${state.batteryInfo.percentage}", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                            Spacer(Modifier.width(3.dp))
+                            MiniBatteryIcon(state.batteryInfo.percentage, small = true)
+                        }
+                        Spacer(Modifier.weight(1f))
+                        Icon(Icons.Outlined.Bolt, null, tint = Color(0xFFFFC857), modifier = Modifier.size(12.dp))
+                        Text(
+                            formatTime(state.timeSinceLastChargeMs),
+                            color = Color(0xFF7A97FF),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 10.sp,
+                            textAlign = TextAlign.Center
+                        )
+                        Text("Şarjdan Beri", color = Color.White.copy(alpha = 0.5f), fontSize = 7.sp)
+                        Spacer(Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun WidgetPreviewFrame(
+    label: String,
+    width: androidx.compose.ui.unit.Dp,
+    height: androidx.compose.ui.unit.Dp,
+    content: @Composable BoxScope.() -> Unit
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(
+            modifier = Modifier
+                .width(width)
+                .height(height)
+                .clip(RoundedCornerShape(24.dp))
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(Color(0xFF181B26), Color(0xFF12141C), Color(0xFF08090D))
+                    )
+                )
+                .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(24.dp)),
+            content = content
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+    }
+}
+
+@Composable
+private fun MiniRing(state: MainUiState.Success, size: androidx.compose.ui.unit.Dp) {
+    val total = (state.screenOnTimeMs + state.screenOffTimeMs).toFloat()
+    val onPct = if (total > 0) state.screenOnTimeMs / total else 0f
+    Box(modifier = Modifier.size(size), contentAlignment = Alignment.Center) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val stroke = size.toPx() * 0.12f
+            drawArc(
+                color = Color(0xFF6F98FF).copy(alpha = 0.25f),
+                startAngle = 0f, sweepAngle = 360f, useCenter = false,
+                style = Stroke(stroke, cap = StrokeCap.Round)
+            )
+            drawArc(
+                color = Color(0xFF2B66FF),
+                startAngle = -90f, sweepAngle = 360f * onPct, useCenter = false,
+                style = Stroke(stroke, cap = StrokeCap.Round)
+            )
+        }
+        Text(
+            formatTime(state.screenOnTimeMs),
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            fontSize = (size.value * 0.16f).sp,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+private fun MiniBatteryIcon(percentage: Int, small: Boolean = false) {
+    val w = if (small) 16.dp else 20.dp
+    val h = if (small) 8.dp else 10.dp
+    Canvas(modifier = Modifier.size(width = w, height = h)) {
+        val bodyRight = size.width - 3f
+        drawRoundRect(
+            color = Color.White.copy(alpha = 0.5f),
+            topLeft = Offset(0f, 0f),
+            size = Size(bodyRight, size.height),
+            cornerRadius = CornerRadius(2f, 2f),
+            style = Stroke(width = 1.5f)
+        )
+        drawRoundRect(
+            color = Color(0xFF00C853),
+            topLeft = Offset(2f, 2f),
+            size = Size((bodyRight - 4f) * (percentage / 100f), size.height - 4f),
+            cornerRadius = CornerRadius(1f, 1f)
+        )
+    }
 }

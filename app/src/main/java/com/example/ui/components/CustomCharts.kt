@@ -192,7 +192,7 @@ fun BatteryDrainChart(
     logs: List<BatteryLogEntity>,
     modifier: Modifier = Modifier
 ) {
-    val primaryColor = MaterialTheme.colorScheme.primary
+    val chartColor = Color(0xFF00C853) // ElectricGreen — battery charts use green, distinct from the blue brand accent
     val onSurface = MaterialTheme.colorScheme.onSurface
     val textMeasurer = rememberTextMeasurer()
 
@@ -266,7 +266,7 @@ fun BatteryDrainChart(
 
         drawPath(
             path = path,
-            color = primaryColor,
+            color = chartColor,
             style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
         )
 
@@ -282,8 +282,8 @@ fun BatteryDrainChart(
                 path = fillPath,
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        primaryColor.copy(alpha = 0.25f),
-                        primaryColor.copy(alpha = 0.0f)
+                        chartColor.copy(alpha = 0.25f),
+                        chartColor.copy(alpha = 0.0f)
                     )
                 )
             )
@@ -306,6 +306,41 @@ fun BatteryDrainChart(
                 style = xLabelStyle
             )
         }
+
+        // Floating rounded badge on the last point showing the current battery %
+        val lastPoint = points.last()
+        val badgeText = "%${activeLogs.last().batteryLevel}"
+        val badgeTextStyle = TextStyle(color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+        val measuredBadge = textMeasurer.measure(badgeText, badgeTextStyle)
+        val badgePaddingH = 10.dp.toPx()
+        val badgePaddingV = 5.dp.toPx()
+        val badgeWidth = measuredBadge.size.width + badgePaddingH * 2
+        val badgeHeight = measuredBadge.size.height + badgePaddingV * 2
+        val badgeX = (lastPoint.x - badgeWidth / 2f).coerceIn(0f, width - badgeWidth)
+        val badgeY = (lastPoint.y - badgeHeight - 10.dp.toPx()).coerceAtLeast(0f)
+
+        drawRoundRect(
+            color = chartColor,
+            topLeft = Offset(badgeX, badgeY),
+            size = Size(badgeWidth, badgeHeight),
+            cornerRadius = CornerRadius(badgeHeight / 2f, badgeHeight / 2f)
+        )
+        drawText(
+            textMeasurer = textMeasurer,
+            text = badgeText,
+            topLeft = Offset(badgeX + badgePaddingH, badgeY + badgePaddingV),
+            style = badgeTextStyle
+        )
+        drawCircle(
+            color = chartColor,
+            radius = 5.dp.toPx(),
+            center = lastPoint
+        )
+        drawCircle(
+            color = Color.White,
+            radius = 2.dp.toPx(),
+            center = lastPoint
+        )
     }
 }
 
