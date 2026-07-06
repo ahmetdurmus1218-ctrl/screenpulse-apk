@@ -56,8 +56,18 @@ jobs:
             cp app/build/outputs/apk/debug/*.apk dist/app-debug.apk
             git add dist/app-debug.apk
           fi
-          git commit -m "CI build log + APK [skip ci]" || echo "nothing to commit"
-          git push || echo "push failed, continuing"
+          git commit -m "CI build log + APK [skip ci]" || echo "Nothing new to commit"
+          for i in 1 2 3 4 5; do
+            if git push; then
+              echo "Push succeeded on attempt $i"
+              exit 0
+            fi
+            echo "Push failed on attempt $i, pulling and rebasing before retry..."
+            git pull --rebase origin "${GITHUB_REF_NAME}" || true
+            sleep 3
+          done
+          echo "::error::Failed to push CI build results after 5 attempts"
+          exit 1
 
       - name: Fail job if build failed
         if: env.BUILD_FAILED == '1'
