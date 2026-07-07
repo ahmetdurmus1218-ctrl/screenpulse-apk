@@ -895,7 +895,9 @@ private fun MiniBatteryIcon(percentage: Int, small: Boolean = false) {
 private fun WidgetDiagnosticBanner() {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("widget_diag", android.content.Context.MODE_PRIVATE) }
-    val lastError = remember { prefs.getString("last_error", null) }
+    // Deliberately NOT using remember for the value itself — re-read fresh every time
+    // this composes so a widget error captured after the app was last opened still shows.
+    val lastError = prefs.getString("last_error", null)
 
     if (!lastError.isNullOrBlank()) {
         Card(

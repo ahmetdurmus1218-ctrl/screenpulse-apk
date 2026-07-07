@@ -58,15 +58,29 @@ open class ScreenPulseWidgetProvider : AppWidgetProvider() {
                 val cleanScreenOff = (cleanTimeSinceCharge - cleanScreenOn).coerceAtLeast(0L)
 
                 appWidgetIds.forEach { widgetId ->
-                    val views = resolveWidgetView(
-                        context = context,
-                        widgetId = widgetId,
-                        appWidgetManager = appWidgetManager,
-                        batteryInfo = batteryInfo,
-                        screenOnMs = cleanScreenOn,
-                        screenOffMs = cleanScreenOff,
-                        timeSinceChargeMs = cleanTimeSinceCharge
-                    )
+                    val views = try {
+                        resolveWidgetView(
+                            context = context,
+                            widgetId = widgetId,
+                            appWidgetManager = appWidgetManager,
+                            batteryInfo = batteryInfo,
+                            screenOnMs = cleanScreenOn,
+                            screenOffMs = cleanScreenOff,
+                            timeSinceChargeMs = cleanTimeSinceCharge
+                        )
+                    } catch (e: Throwable) {
+                        // Record the specific failure, but still show SOMETHING rather
+                        // than leaving the widget totally blank.
+                        val sw = java.io.StringWriter()
+                        e.printStackTrace(java.io.PrintWriter(sw))
+                        context.getSharedPreferences("widget_diag", Context.MODE_PRIVATE).edit()
+                            .putString("last_error", "resolveWidgetView failed: " + sw.toString().take(1800))
+                            .putLong("last_error_ts", System.currentTimeMillis())
+                            .apply()
+                        RemoteViews(context.packageName, R.layout.widget_2x2).apply {
+                            setTextViewText(R.id.widget_battery, "%${batteryInfo.percentage}")
+                        }
+                    }
 
                     // Add PendingIntent to open App on click
                     val intent = Intent(context, MainActivity::class.java)
@@ -85,9 +99,12 @@ open class ScreenPulseWidgetProvider : AppWidgetProvider() {
                     .putString("last_error", null)
                     .putLong("last_success_ts", System.currentTimeMillis())
                     .apply()
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 // Prevent widget crashing, but record what happened so it can be viewed
                 // from inside the app itself (no computer/adb needed to diagnose).
+                // NOTE: catches Throwable, not just Exception — some failures (e.g.
+                // OutOfMemoryError from bitmap drawing) are Errors, not Exceptions, and
+                // a plain "catch (e: Exception)" would silently let those escape.
                 val sw = java.io.StringWriter()
                 e.printStackTrace(java.io.PrintWriter(sw))
                 context.getSharedPreferences("widget_diag", Context.MODE_PRIVATE).edit()
