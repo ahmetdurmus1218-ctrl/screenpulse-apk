@@ -15,4 +15,6 @@
 .cxx
 local.properties
 .env
-debug.keystore
+# debug.keystore is intentionally committed (see app/build.gradle.kts) so every
+# build — local or CI — signs with the same debug key. Without this, home-screen
+# widgets break on every reinstall because the signature changes each time.

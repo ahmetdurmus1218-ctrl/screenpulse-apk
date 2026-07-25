@@ -31,6 +31,20 @@ android {
       keyAlias = "upload"
       keyPassword = System.getenv("KEY_PASSWORD")
     }
+    getByName("debug") {
+      // BUG FIX: without this, each machine (and worse, each fresh CI runner with no
+      // persisted ~/.android/debug.keystore) auto-generates its OWN random debug key.
+      // Every rebuild from a clean CI runner was therefore signed with a different key
+      // than the previous one — Android treats that as a different app, silently
+      // replaces the old install on update, and any home-screen widget bound to the
+      // old install instance is orphaned and renders blank/white. Pointing every debug
+      // build at this one committed keystore keeps the signature identical across all
+      // future builds, so updates install in place and existing widgets keep working.
+      storeFile = file("${rootDir}/debug.keystore")
+      storePassword = "android"
+      keyAlias = "androiddebugkey"
+      keyPassword = "android"
+    }
   }
 
   buildTypes {
