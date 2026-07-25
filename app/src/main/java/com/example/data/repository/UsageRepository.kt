@@ -77,39 +77,39 @@ class UsageRepository(
             else -> "İyi" // Default to good if unknown but percentage is fine
         }
 
-        val cycleCount = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        // Our own health-based estimate, computed purely from real charging sessions this
+        // app has observed (same method apps like AccuBattery use): every time a charge
+        // session ends with a higher battery % than it started, we add the gained
+        // percentage to a running total; every 100 accumulated points = one full
+        // equivalent cycle. This starts counting from whenever the app was installed,
+        // so it will read low at first no matter what, but it's fully transparent and
+        // predictable — unlike the OEM hardware value below.
+        val cumulative = settingsManager.cumulativeChargePercent.first()
+        val finalCycleCount = if (cumulative > 0f) (cumulative / 100f).toInt() else 0
+        val cycleCountIsEstimate = true
+        val cycleProgressPct = (cumulative % 100f).toInt()
+
+        // Separately, try to read the device's own hardware cycle-count property
+        // (BATTERY_PROPERTY_CYCLE_COUNT, raw value 6, API 34+). Kept entirely apart from
+        // our own estimate above — on several OEM ROMs this either isn't implemented or
+        // reports a number that doesn't reflect reality, so it's shown as its own
+        // distinct metric (or "Desteklenmiyor") rather than ever being blended into or
+        // substituted for our estimate.
+        val hardwareCycleCount = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             try {
                 val batteryManager = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
-                // BUG FIX: constant 4 is BATTERY_PROPERTY_CAPACITY (percentage, 0-100), NOT cycle
-                // count — that's why this used to show the same number as battery %. The real
-                // cycle-count property value is 6 (BatteryManager.BATTERY_PROPERTY_CYCLE_COUNT,
-                // API 34+; the named constant isn't exposed in this compileSdk's stub, so we use
-                // the documented raw value directly).
-                // Android returns Integer.MIN_VALUE (a large negative number) when a property
-                // isn't supported — 0 is a legitimate value (brand-new battery), so only treat
-                // negative results as "unsupported", not "zero or less".
                 val cycles = batteryManager.getIntProperty(6)
                 if (cycles >= 0) cycles else -1
             } catch (e: Exception) {
-                // Some OEMs/kernels throw instead of returning a sentinel for
-                // unsupported properties — treat that the same as "not supported".
                 -1
             }
         } else {
             -1
         }
 
-        // Fallback for devices/Android versions without the real hardware cycle counter:
-        // estimate cycles from cumulative % charged across real charging sessions we've
-        // observed (same method apps like AccuBattery use). Marked distinctly from the
-        // real hardware value so the UI can note it's an estimate.
-        val cycleCountIsEstimate = cycleCount < 0
-        val finalCycleCount = if (cycleCount >= 0) {
-            cycleCount
-        } else {
-            val cumulative = settingsManager.cumulativeChargePercent.first()
-            if (cumulative > 0f) (cumulative / 100f).toInt() else -1
-        }
+        // Raw "how many times plugged in" count — a different, simpler metric again,
+        // not folded into either of the two above.
+        val plugInCount = settingsManager.plugInCount.first()
 
         val lastUnpluggedBatteryLevel = settingsManager.lastUnpluggedBattery.first()
         val batteryUsedSinceCharge = if (lastUnpluggedBatteryLevel > percentage) {
@@ -130,6 +130,9 @@ class UsageRepository(
             health = healthStr,
             cycleCount = finalCycleCount,
             cycleCountIsEstimate = cycleCountIsEstimate,
+            cycleProgressPct = cycleProgressPct,
+            hardwareCycleCount = hardwareCycleCount,
+            plugInCount = plugInCount,
             batteryUsedSinceCharge = batteryUsedSinceCharge,
             lastChargeTimeMs = lastChargeTime,
             lastUnpluggedTimeMs = lastUnpluggedTime

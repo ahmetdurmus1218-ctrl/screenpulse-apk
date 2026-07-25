@@ -19,6 +19,7 @@ class SettingsManager(private val context: Context) {
         private val KEY_WAS_CHARGING = booleanPreferencesKey("was_charging")
         private val KEY_CHARGE_SESSION_START_LEVEL = intPreferencesKey("charge_session_start_level")
         private val KEY_CUMULATIVE_CHARGE_PERCENT = floatPreferencesKey("cumulative_charge_percent")
+        private val KEY_PLUG_IN_COUNT = intPreferencesKey("plug_in_count")
     }
 
     /**
@@ -31,9 +32,22 @@ class SettingsManager(private val context: Context) {
         preferences[KEY_CUMULATIVE_CHARGE_PERCENT] ?: 0f
     }
 
+    /**
+     * Simple, literal count of "how many times the phone was plugged in to charge" —
+     * distinct from the health-based cycle estimate above, which counts accumulated %
+     * charged, not plug events. Kept separate on purpose: five quick top-up plugs and
+     * one long full charge are very different for battery wear even though they could
+     * both be "1 charge event" depending on how you count, so this raw count is shown
+     * as its own metric rather than folded into the cycle estimate.
+     */
+    val plugInCount: Flow<Int> = context.dataStore.data.map { preferences ->
+        preferences[KEY_PLUG_IN_COUNT] ?: 0
+    }
+
     suspend fun onChargingSessionStart(batteryLevel: Int) {
         context.dataStore.edit { preferences ->
             preferences[KEY_CHARGE_SESSION_START_LEVEL] = batteryLevel
+            preferences[KEY_PLUG_IN_COUNT] = (preferences[KEY_PLUG_IN_COUNT] ?: 0) + 1
         }
     }
 

@@ -144,25 +144,35 @@ class ScreenPulseViewModel(
                 val history = repository.getAllUsageHistory().first()
                 val batteryLogs = repository.getBatteryLogs(now - 24 * 3600 * 1000L).first()
 
-                // Save today's log to usage history database
-                val todayStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-                val todayHistory = UsageHistoryEntity(
-                    date = todayStr,
-                    screenOnTimeMs = cleanScreenOn,
-                    screenOffTimeMs = cleanScreenOff,
-                    batteryUsedPct = batteryInfo.batteryUsedSinceCharge,
-                    totalTimeSinceChargeMs = cleanTimeSinceCharge
-                )
-                repository.saveUsageHistory(todayHistory)
-
-                // Real hourly buckets for today (00-04, 04-08, ... 20-24) — actual
-                // per-window UsageStatsManager queries, not a fixed made-up split.
+                // Calendar-day boundary (midnight), independent of charge cycles.
                 val todayStart = Calendar.getInstance().apply {
                     set(Calendar.HOUR_OF_DAY, 0)
                     set(Calendar.MINUTE, 0)
                     set(Calendar.SECOND, 0)
                     set(Calendar.MILLISECOND, 0)
                 }.timeInMillis
+
+                // Save today's log to usage history database.
+                // BUG FIX: this used to be built from cleanScreenOn/cleanScreenOff, which are
+                // measured from lastUnpluggedTime (i.e. since the last charge), NOT since
+                // midnight. That made the "Gün" bar chart collapse to a tiny value every time
+                // the phone was plugged in and unplugged during the day, even though the day's
+                // real screen time kept accumulating. The daily record must be keyed off the
+                // calendar day, not the charge cycle, so it stays correct across any number of
+                // charges within the same day.
+                val (dayScreenOn, dayScreenOff) = repository.getScreenOnOffFromEvents(todayStart, now)
+                val todayStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                val todayHistory = UsageHistoryEntity(
+                    date = todayStr,
+                    screenOnTimeMs = dayScreenOn,
+                    screenOffTimeMs = dayScreenOff,
+                    batteryUsedPct = batteryInfo.batteryUsedSinceCharge,
+                    totalTimeSinceChargeMs = (now - todayStart).coerceAtLeast(0L)
+                )
+                repository.saveUsageHistory(todayHistory)
+
+                // Real hourly buckets for today (00-04, 04-08, ... 20-24) — actual
+                // per-window UsageStatsManager queries, not a fixed made-up split.
                 val hourlyBuckets = (0 until 6).map { blockIndex ->
                     val blockStart = todayStart + blockIndex * 4 * 3600 * 1000L
                     val blockEnd = (blockStart + 4 * 3600 * 1000L).coerceAtMost(now)

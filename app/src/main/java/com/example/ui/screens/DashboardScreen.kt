@@ -512,13 +512,26 @@ private fun BatteryInfoCard(state: MainUiState.Success, onRefresh: () -> Unit) {
                 Modifier.weight(1f)
             )
             BatteryMetricItem(
-                "Şarj Döngüsü",
-                when {
-                    state.batteryInfo.cycleCount < 0 -> "Bekleniyor"
-                    state.batteryInfo.cycleCountIsEstimate -> "~${state.batteryInfo.cycleCount}"
-                    else -> "${state.batteryInfo.cycleCount}"
-                },
+                "Sağlık Döngüsü (Tahmini)",
+                "~${state.batteryInfo.cycleCount} (sonraki: %${state.batteryInfo.cycleProgressPct})",
                 Icons.Outlined.Cached,
+                Modifier.weight(1f)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Row(modifier = Modifier.fillMaxWidth()) {
+            BatteryMetricItem(
+                "Donanım Döngüsü",
+                if (state.batteryInfo.hardwareCycleCount >= 0) "${state.batteryInfo.hardwareCycleCount}" else "Desteklenmiyor",
+                Icons.Outlined.Memory,
+                Modifier.weight(1f)
+            )
+            BatteryMetricItem(
+                "Fişe Takma Sayısı",
+                "${state.batteryInfo.plugInCount}",
+                Icons.Outlined.Power,
                 Modifier.weight(1f)
             )
         }
@@ -615,13 +628,23 @@ fun GridBatteryMetrics(info: BatteryInfo) {
         }
         Row(modifier = Modifier.fillMaxWidth()) {
             BatteryMetricItem(
-                "Şarj Döngüsü",
-                when {
-                    info.cycleCount < 0 -> "Bekleniyor"
-                    info.cycleCountIsEstimate -> "~${info.cycleCount}"
-                    else -> "${info.cycleCount}"
-                },
+                "Sağlık Döngüsü (Tahmini)",
+                "~${info.cycleCount} (sonraki: %${info.cycleProgressPct})",
                 Icons.Outlined.Cached,
+                Modifier.weight(1f)
+            )
+            BatteryMetricItem(
+                "Donanım Döngüsü",
+                if (info.hardwareCycleCount >= 0) "${info.hardwareCycleCount}" else "Desteklenmiyor",
+                Icons.Outlined.Memory,
+                Modifier.weight(1f)
+            )
+        }
+        Row(modifier = Modifier.fillMaxWidth()) {
+            BatteryMetricItem(
+                "Fişe Takma Sayısı",
+                "${info.plugInCount}",
+                Icons.Outlined.Power,
                 Modifier.weight(1f)
             )
             val dateStr = if (info.lastUnpluggedTimeMs > 0) {
