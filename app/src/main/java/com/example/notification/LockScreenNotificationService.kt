@@ -39,25 +39,19 @@ class LockScreenNotificationService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        // CRITICAL: startForeground() must be called synchronously, immediately, with no
+        // suspend/async work in between — Android (increasingly strictly on 14+/15+) kills
+        // the service if this doesn't happen within a few seconds of it starting. The
+        // previous version fetched real battery data (a suspend DataStore/UsageStats call)
+        // BEFORE calling startForeground(), which could easily miss that window and cause
+        // the service — and its notification — to silently never appear at all.
+        startForeground(NotificationHelper.NOTIFICATION_ID, NotificationHelper.buildPlaceholderNotification(this))
         registerReceivers()
+        scope.launch { refresh() }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // Show a placeholder immediately so startForeground() is satisfied right away —
-        // refresh() posts the real content moments later once data is fetched.
-        val app = applicationContext as ScreenPulseApplication
-        scope.launch {
-            val battery = try {
-                app.repository.getBatteryInfo()
-            } catch (_: Throwable) {
-                null
-            } ?: return@launch
-            val notification = NotificationHelper.buildNotification(
-                this@LockScreenNotificationService, battery, screenOnMs = 0L, ongoing = true
-            )
-            startForeground(NotificationHelper.NOTIFICATION_ID, notification)
-            refresh()
-        }
+        scope.launch { refresh() }
         return START_STICKY
     }
 

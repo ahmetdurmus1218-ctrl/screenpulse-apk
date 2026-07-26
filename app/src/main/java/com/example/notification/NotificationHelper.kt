@@ -43,6 +43,26 @@ object NotificationHelper {
         manager.createNotificationChannel(channel)
     }
 
+    fun buildPlaceholderNotification(context: Context): android.app.Notification {
+        ensureChannel(context)
+        val openAppIntent = Intent(context, MainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(
+            context, 0, openAppIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        return NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_widget_pulse)
+            .setContentTitle("ScreenPulse")
+            .setContentText("Yükleniyor…")
+            .setOngoing(true)
+            .setSilent(true)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setContentIntent(pendingIntent)
+            .setCategory(NotificationCompat.CATEGORY_STATUS)
+            .build()
+    }
+
     fun buildNotification(
         context: Context,
         batteryInfo: BatteryInfo,
