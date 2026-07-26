@@ -3,62 +3,97 @@ package com.example.widget
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.graphics.*
-import android.os.Bundle
 import android.widget.RemoteViews
+import androidx.annotation.LayoutRes
 import com.example.MainActivity
 import com.example.R
 import com.example.ScreenPulseApplication
 import com.example.data.model.BatteryInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
-open class ScreenPulseWidgetProvider : AppWidgetProvider() {
-
-    private val job = SupervisorJob()
-    // BUG FIX: this used to run on Dispatchers.Main. queryEvents() below can iterate a large
-    // number of system events synchronously — on the Main dispatcher that blocks widget
-    // rendering. IO is the correct dispatcher for this kind of blocking system-service call.
-    private val scope = CoroutineScope(Dispatchers.IO + job)
+open class ScreenPulseWidgetProvider(
+    @LayoutRes protected open val layoutResId: Int = R.layout.widget_2x2
+) : AppWidgetProvider() {
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
-        // CRITICAL FIX: without goAsync(), Android is free to kill this process the moment
-        // onUpdate() returns — but all our work below (DataStore reads, Room DB, UsageStats
-        // queries) happens asynchronously in a coroutine that hadn't necessarily finished yet.
-        // That's why widgets could silently never update: the process could be torn down
-        // mid-flight before appWidgetManager.updateAppWidget() ever got called.
+        // Step 1: Immediate synchronous update using this provider's exact layout
+        appWidgetIds.forEach { widgetId ->
+            try {
+                val initialViews = RemoteViews(context.packageName, layoutResId)
+                val intent = Intent(context, MainActivity::class.java)
+                val pendingIntent = PendingIntent.getActivity(
+                    context,
+                    0,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+                initialViews.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
+                appWidgetManager.updateAppWidget(widgetId, initialViews)
+            } catch (t: Throwable) {
+                t.printStackTrace()
+            }
+        }
+
         val pendingResult = goAsync()
 
-        val app = context.applicationContext as ScreenPulseApplication
+        val app = context.applicationContext as? ScreenPulseApplication
+        if (app == null) {
+            try { pendingResult.finish() } catch (_: Throwable) {}
+            return
+        }
         val repository = app.repository
         val settingsManager = app.settingsManager
 
-        scope.launch {
+        CoroutineScope(Dispatchers.IO).launch {
             try {
-                // Catch up on any missed charge/unplug transition, same as the app does.
-                repository.checkAndUpdateChargeTransition()
+                try {
+                    repository.checkAndUpdateChargeTransition()
+                } catch (t: Throwable) {
+                    t.printStackTrace()
+                }
 
-                // Fetch real telemetry
-                val batteryInfo = repository.getBatteryInfo()
-                val rawLastUnpluggedTime = settingsManager.lastUnpluggedTime.first()
+                val batteryInfo = try {
+                    repository.getBatteryInfo()
+                } catch (t: Throwable) {
+                    BatteryInfo(
+                        percentage = 50,
+                        isCharging = false,
+                        chargingStatus = "Deşarj Oluyor",
+                        voltage = 3.8f,
+                        temperature = 25.0f,
+                        health = "İyi",
+                        cycleCount = 0,
+                        cycleCountIsEstimate = true,
+                        cycleProgressPct = 0,
+                        hardwareCycleCount = -1,
+                        plugInCount = 0,
+                        batteryUsedSinceCharge = 0,
+                        lastChargeTimeMs = 0L,
+                        lastUnpluggedTimeMs = 0L
+                    )
+                }
+
                 val now = System.currentTimeMillis()
-                // 0L means "never initialized" (e.g. widget added before the app was ever
-                // opened, so initializeIfNeeded() in the app never ran). Querying from epoch
-                // to now can mean walking the device's *entire* recorded usage history, which
-                // can hang. Fall back to a safe recent window instead.
-                val lastUnpluggedTime = if (rawLastUnpluggedTime <= 0L) now - 4 * 3600 * 1000L else rawLastUnpluggedTime
+                val lastUnpluggedTime = try {
+                    val rawLastUnplugged = settingsManager.lastUnpluggedTime.first()
+                    if (rawLastUnplugged <= 0L || rawLastUnplugged > now) (now - 4 * 3600 * 1000L) else rawLastUnplugged
+                } catch (t: Throwable) {
+                    now - 4 * 3600 * 1000L
+                }
 
-                // Real screen on/off split, same accurate source used by the app itself —
-                // NOT a sum of per-app foreground time (which can overcount).
-                val (realScreenOn, realScreenOff) = repository.getScreenOnOffFromEvents(lastUnpluggedTime, now)
+                val (realScreenOn, realScreenOff) = try {
+                    repository.getScreenOnOffFromEvents(lastUnpluggedTime, now)
+                } catch (t: Throwable) {
+                    (0L to 0L)
+                }
 
                 val timeSinceCharge = now - lastUnpluggedTime
                 val cleanTimeSinceCharge = if (timeSinceCharge > 0) timeSinceCharge else 4 * 3600 * 1000L
@@ -66,31 +101,15 @@ open class ScreenPulseWidgetProvider : AppWidgetProvider() {
                 val cleanScreenOff = (cleanTimeSinceCharge - cleanScreenOn).coerceAtLeast(0L)
 
                 appWidgetIds.forEach { widgetId ->
-                    val views = try {
-                        resolveWidgetView(
-                            context = context,
-                            widgetId = widgetId,
-                            appWidgetManager = appWidgetManager,
-                            batteryInfo = batteryInfo,
-                            screenOnMs = cleanScreenOn,
-                            screenOffMs = cleanScreenOff,
-                            timeSinceChargeMs = cleanTimeSinceCharge
-                        )
-                    } catch (e: Throwable) {
-                        // Record the specific failure, but still show SOMETHING rather
-                        // than leaving the widget totally blank.
-                        val sw = java.io.StringWriter()
-                        e.printStackTrace(java.io.PrintWriter(sw))
-                        context.getSharedPreferences("widget_diag", Context.MODE_PRIVATE).edit()
-                            .putString("last_error", "resolveWidgetView failed: " + sw.toString().take(1800))
-                            .putLong("last_error_ts", System.currentTimeMillis())
-                            .apply()
-                        RemoteViews(context.packageName, R.layout.widget_2x2).apply {
-                            setTextViewText(R.id.widget_battery, "%${batteryInfo.percentage}")
-                        }
-                    }
+                    val views = populateWidgetViews(
+                        context = context,
+                        targetLayoutResId = layoutResId,
+                        batteryInfo = batteryInfo,
+                        screenOnMs = cleanScreenOn,
+                        screenOffMs = cleanScreenOff,
+                        timeSinceChargeMs = cleanTimeSinceCharge
+                    )
 
-                    // Add PendingIntent to open App on click
                     val intent = Intent(context, MainActivity::class.java)
                     val pendingIntent = PendingIntent.getActivity(
                         context,
@@ -102,42 +121,25 @@ open class ScreenPulseWidgetProvider : AppWidgetProvider() {
 
                     appWidgetManager.updateAppWidget(widgetId, views)
                 }
-                // Success — clear any previously recorded error so the app doesn't show stale info.
-                context.getSharedPreferences("widget_diag", Context.MODE_PRIVATE).edit()
-                    .putString("last_error", null)
-                    .putLong("last_success_ts", System.currentTimeMillis())
-                    .apply()
             } catch (e: Throwable) {
-                // Prevent widget crashing, but record what happened so it can be viewed
-                // from inside the app itself (no computer/adb needed to diagnose).
-                // NOTE: catches Throwable, not just Exception — some failures (e.g.
-                // OutOfMemoryError from bitmap drawing) are Errors, not Exceptions, and
-                // a plain "catch (e: Exception)" would silently let those escape.
-                val sw = java.io.StringWriter()
-                e.printStackTrace(java.io.PrintWriter(sw))
-                context.getSharedPreferences("widget_diag", Context.MODE_PRIVATE).edit()
-                    .putString("last_error", sw.toString().take(2000))
-                    .putLong("last_error_ts", System.currentTimeMillis())
-                    .apply()
+                e.printStackTrace()
             } finally {
-                pendingResult.finish()
+                try {
+                    pendingResult.finish()
+                } catch (_: Throwable) {}
             }
         }
     }
 
-    private fun resolveWidgetView(
+    private fun populateWidgetViews(
         context: Context,
-        widgetId: Int,
-        appWidgetManager: AppWidgetManager,
+        targetLayoutResId: Int,
         batteryInfo: BatteryInfo,
         screenOnMs: Long,
         screenOffMs: Long,
         timeSinceChargeMs: Long
     ): RemoteViews {
-        // Query options to determine if we are 2x2, 4x2, or 4x4
-        val options = appWidgetManager.getAppWidgetOptions(widgetId)
-        val minWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
-        val minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT)
+        val views = RemoteViews(context.packageName, targetLayoutResId)
 
         val sotStr = formatWidgetTime(screenOnMs)
         val soffStr = formatWidgetTime(screenOffMs)
@@ -150,68 +152,89 @@ open class ScreenPulseWidgetProvider : AppWidgetProvider() {
 
         val batteryIconBitmap = drawMiniBatteryIcon(batteryInfo.percentage, batteryInfo.isCharging)
 
-        return when {
-            minWidth < 100 && minHeight >= 200 -> {
-                // 1x4 Widget (narrow, tall): ring, then %+battery icon, then bolt+since-charge
-                RemoteViews(context.packageName, R.layout.widget_1x4).apply {
-                    setTextViewText(R.id.widget_battery, "%${batteryInfo.percentage}")
-                    setImageViewBitmap(R.id.widget_battery_icon, batteryIconBitmap)
-                    setTextViewText(R.id.widget_sot_value, sinceChargeStr)
-                    val ring = drawScreenTimeRing(sotStr, screenOnMs, screenOffMs, compact = true)
-                    setImageViewBitmap(R.id.widget_sot_ring, ring)
+        val cycleCountVal = if (batteryInfo.hardwareCycleCount > 0) batteryInfo.hardwareCycleCount else batteryInfo.cycleCount.coerceAtLeast(0)
+        val cycleStr = "${cycleCountVal} dng"
+        val cycleDotStr = "• ${cycleCountVal} dng"
+
+        when (targetLayoutResId) {
+            R.layout.widget_1x4 -> {
+                views.setTextViewText(R.id.widget_battery, "%${batteryInfo.percentage}")
+                views.setTextViewText(R.id.widget_cycle_value, cycleStr)
+                views.setImageViewBitmap(R.id.widget_battery_icon, batteryIconBitmap)
+                views.setTextViewText(R.id.widget_sot_value, sinceChargeStr)
+                getVectorBitmap(context, R.drawable.ic_widget_bolt, 12, 12)?.let {
+                    views.setImageViewBitmap(R.id.widget_bolt_icon, it)
+                }
+                val ring = drawScreenTimeRing(context, sotStr, screenOnMs, screenOffMs, compact = true)
+                views.setImageViewBitmap(R.id.widget_sot_ring, ring)
+            }
+            R.layout.widget_2x4 -> {
+                views.setTextViewText(R.id.widget_sot_value, sotStr)
+                views.setTextViewText(R.id.widget_battery, "%${batteryInfo.percentage}")
+                views.setTextViewText(R.id.widget_cycle_value, cycleDotStr)
+                views.setImageViewBitmap(R.id.widget_battery_icon, batteryIconBitmap)
+                getVectorBitmap(context, R.drawable.ic_widget_sun, 14, 14)?.let {
+                    views.setImageViewBitmap(R.id.widget_sun_icon, it)
                 }
             }
-            minWidth < 200 && minHeight >= 200 -> {
-                // 2x4 Widget (medium width, tall): header, big SOT number, %+battery icon
-                RemoteViews(context.packageName, R.layout.widget_2x4).apply {
-                    setTextViewText(R.id.widget_sot_value, sotStr)
-                    setTextViewText(R.id.widget_battery, "%${batteryInfo.percentage}")
-                    setImageViewBitmap(R.id.widget_battery_icon, batteryIconBitmap)
+            R.layout.widget_4x4 -> {
+                views.setTextViewText(R.id.widget_sot_value, sotStr)
+                views.setTextViewText(R.id.widget_screen_off_value, soffStr)
+                views.setTextViewText(R.id.widget_last_charge_time, lastChargeStr)
+                getVectorBitmap(context, R.drawable.ic_widget_pulse, 14, 14)?.let {
+                    views.setImageViewBitmap(R.id.widget_pulse_icon, it)
                 }
+                views.setTextViewText(
+                    R.id.widget_temp_value,
+                    String.format(Locale.getDefault(), "%.1f°C", batteryInfo.temperature)
+                )
+                views.setTextViewText(
+                    R.id.widget_voltage_value,
+                    String.format(Locale.getDefault(), "%.1fV", batteryInfo.voltage)
+                )
+                views.setTextViewText(R.id.widget_cycle_value, cycleStr)
+                val bitmap = drawCircularBattery(context, batteryInfo.percentage, batteryInfo.isCharging)
+                views.setImageViewBitmap(R.id.widget_battery_circle, bitmap)
             }
-            minWidth >= 200 && minHeight >= 200 -> {
-                // 4x4 Widget
-                RemoteViews(context.packageName, R.layout.widget_4x4).apply {
-                    setTextViewText(R.id.widget_sot_value, sotStr)
-                    setTextViewText(R.id.widget_screen_off_value, soffStr)
-                    setTextViewText(R.id.widget_last_charge_time, lastChargeStr)
-                    setTextViewText(
-                        R.id.widget_temp_value,
-                        String.format(Locale.getDefault(), "%.1f°C", batteryInfo.temperature)
-                    )
-                    setTextViewText(
-                        R.id.widget_voltage_value,
-                        String.format(Locale.getDefault(), "%.1fV", batteryInfo.voltage)
-                    )
-                    // Draw circular battery bitmap
-                    val bitmap = drawCircularBattery(batteryInfo.percentage, batteryInfo.isCharging)
-                    setImageViewBitmap(R.id.widget_battery_circle, bitmap)
+            R.layout.widget_4x2 -> {
+                views.setTextViewText(R.id.widget_battery, "%${batteryInfo.percentage}")
+                views.setTextViewText(R.id.widget_cycle_value, cycleStr)
+                views.setTextViewText(R.id.widget_sot_value, sinceChargeStr)
+                views.setImageViewBitmap(R.id.widget_battery_icon, batteryIconBitmap)
+                getVectorBitmap(context, R.drawable.ic_widget_sun, 16, 16)?.let {
+                    views.setImageViewBitmap(R.id.widget_sun_icon, it)
                 }
+                val ring = drawScreenTimeRing(context, sotStr, screenOnMs, screenOffMs, compact = false)
+                views.setImageViewBitmap(R.id.widget_sot_ring, ring)
             }
-            minWidth >= 200 -> {
-                // 4x2 Widget: ring on the left, %+Şarjdan Beri stacked on the right
-                RemoteViews(context.packageName, R.layout.widget_4x2).apply {
-                    setTextViewText(R.id.widget_battery, "%${batteryInfo.percentage}")
-                    setTextViewText(R.id.widget_sot_value, sinceChargeStr)
-                    setImageViewBitmap(R.id.widget_battery_icon, batteryIconBitmap)
-                    val ring = drawScreenTimeRing(sotStr, screenOnMs, screenOffMs, compact = false)
-                    setImageViewBitmap(R.id.widget_sot_ring, ring)
-                }
+            else -> { // widget_2x2
+                views.setTextViewText(R.id.widget_battery, "%${batteryInfo.percentage}")
+                views.setTextViewText(R.id.widget_cycle_value, cycleStr)
+                views.setImageViewBitmap(R.id.widget_battery_icon, batteryIconBitmap)
+                val ring = drawScreenTimeRing(context, sotStr, screenOnMs, screenOffMs, compact = true)
+                views.setImageViewBitmap(R.id.widget_sot_ring, ring)
             }
-            else -> {
-                // 2x2 Widget: ring, then %+battery icon
-                RemoteViews(context.packageName, R.layout.widget_2x2).apply {
-                    setTextViewText(R.id.widget_battery, "%${batteryInfo.percentage}")
-                    setImageViewBitmap(R.id.widget_battery_icon, batteryIconBitmap)
-                    val ring = drawScreenTimeRing(sotStr, screenOnMs, screenOffMs, compact = true)
-                    setImageViewBitmap(R.id.widget_sot_ring, ring)
-                }
-            }
+        }
+
+        return views
+    }
+
+    private fun getVectorBitmap(context: Context, resId: Int, widthDp: Int = 16, heightDp: Int = 16): Bitmap? {
+        return try {
+            val drawable = androidx.core.content.ContextCompat.getDrawable(context, resId) ?: return null
+            val density = context.resources.displayMetrics.density
+            val w = (widthDp * density).toInt().coerceAtLeast(1)
+            val h = (heightDp * density).toInt().coerceAtLeast(1)
+            val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bitmap)
+            drawable.setBounds(0, 0, w, h)
+            drawable.draw(canvas)
+            bitmap
+        } catch (_: Throwable) {
+            null
         }
     }
 
-    /** Ring bitmap showing the screen-on/off proportion, matching the app's own ring styling. */
-    /** Small horizontal battery pill icon (outline + green fill + nub), matching the reference exactly. */
     private fun drawMiniBatteryIcon(percentage: Int, isCharging: Boolean): Bitmap {
         val w = 120
         val h = 60
@@ -255,15 +278,18 @@ open class ScreenPulseWidgetProvider : AppWidgetProvider() {
         return bitmap
     }
 
-    private fun drawScreenTimeRing(valueLabel: String, screenOnMs: Long, screenOffMs: Long, compact: Boolean): Bitmap {
+    private fun drawScreenTimeRing(context: Context, valueLabel: String, screenOnMs: Long, screenOffMs: Long, compact: Boolean): Bitmap {
         val size = 200
         val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
 
         val total = (screenOnMs + screenOffMs).toFloat()
-        val onPct = if (total > 0) screenOnMs / total else 0f
+        val onPct = if (total > 0) (screenOnMs.toFloat() / total).coerceIn(0f, 1f) else 0f
 
         val ringStrokeWidth = if (compact) 16f else 20f
+        val pad = ringStrokeWidth + 6f
+        val rect = RectF(pad, pad, size - pad, size - pad)
+
         val paintTrack = Paint().apply {
             color = Color.parseColor("#336F98FF")
             style = Paint.Style.STROKE
@@ -286,12 +312,35 @@ open class ScreenPulseWidgetProvider : AppWidgetProvider() {
             isAntiAlias = true
         }
 
-        val pad = ringStrokeWidth
-        val rect = RectF(pad, pad, size - pad, size - pad)
         canvas.drawArc(rect, 0f, 360f, false, paintTrack)
-        canvas.drawArc(rect, -90f, 360f * onPct, false, paintProgress)
+        val sweepAngle = 360f * onPct
+        canvas.drawArc(rect, -90f, sweepAngle, false, paintProgress)
 
-        // Wrap "3sa 18dk" onto two lines if needed
+        // Draw sun indicator orb at the tip of the progress arc
+        val endAngleDeg = -90f + sweepAngle
+        val endAngleRad = Math.toRadians(endAngleDeg.toDouble())
+        val centerX = size / 2f
+        val centerY = size / 2f
+        val radius = (size - 2 * pad) / 2f
+
+        val tipX = centerX + radius * Math.cos(endAngleRad).toFloat()
+        val tipY = centerY + radius * Math.sin(endAngleRad).toFloat()
+
+        // Glowing backdrop circle for the sun
+        val glowPaint = Paint().apply {
+            color = Color.parseColor("#80FFC857")
+            style = Paint.Style.FILL
+            isAntiAlias = true
+        }
+        val glowRadius = if (compact) 12f else 15f
+        canvas.drawCircle(tipX, tipY, glowRadius, glowPaint)
+
+        // Draw sun vector icon centered at tip
+        val sunSizeDp = if (compact) 16 else 20
+        getVectorBitmap(context, R.drawable.ic_widget_sun, sunSizeDp, sunSizeDp)?.let { sunBmp ->
+            canvas.drawBitmap(sunBmp, tipX - sunBmp.width / 2f, tipY - sunBmp.height / 2f, null)
+        }
+
         val parts = valueLabel.split(" ")
         if (parts.size == 2) {
             canvas.drawText(parts[0], size / 2f, size / 2f - 6f, paintText)
@@ -304,12 +353,16 @@ open class ScreenPulseWidgetProvider : AppWidgetProvider() {
         return bitmap
     }
 
-    private fun drawCircularBattery(percentage: Int, isCharging: Boolean): Bitmap {
-        val bitmap = Bitmap.createBitmap(160, 160, Bitmap.Config.ARGB_8888)
+    private fun drawCircularBattery(context: Context, percentage: Int, isCharging: Boolean): Bitmap {
+        val size = 160
+        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
 
+        val pad = 22f
+        val rect = RectF(pad, pad, size - pad, size - pad)
+
         val paintTrack = Paint().apply {
-            color = Color.parseColor("#15FFFFFF") // Subtle overlay track
+            color = Color.parseColor("#15FFFFFF")
             style = Paint.Style.STROKE
             strokeWidth = 14f
             isAntiAlias = true
@@ -322,6 +375,33 @@ open class ScreenPulseWidgetProvider : AppWidgetProvider() {
             strokeWidth = 14f
             strokeCap = Paint.Cap.ROUND
             isAntiAlias = true
+        }
+
+        val sweepAngle = (percentage.coerceIn(0, 100) / 100f) * 360f
+        canvas.drawArc(rect, 0f, 360f, false, paintTrack)
+        canvas.drawArc(rect, -90f, sweepAngle, false, paintProgress)
+
+        // Sun or bolt icon at progress tip on battery circle
+        val endAngleDeg = -90f + sweepAngle
+        val endAngleRad = Math.toRadians(endAngleDeg.toDouble())
+        val centerX = size / 2f
+        val centerY = size / 2f
+        val radius = (size - 2 * pad) / 2f
+
+        val tipX = centerX + radius * Math.cos(endAngleRad).toFloat()
+        val tipY = centerY + radius * Math.sin(endAngleRad).toFloat()
+
+        val glowColorStr = if (isCharging) "#80FFC857" else "#802196F3"
+        val glowPaint = Paint().apply {
+            color = Color.parseColor(glowColorStr)
+            style = Paint.Style.FILL
+            isAntiAlias = true
+        }
+        canvas.drawCircle(tipX, tipY, 13f, glowPaint)
+
+        val iconRes = if (isCharging) R.drawable.ic_widget_bolt else R.drawable.ic_widget_sun
+        getVectorBitmap(context, iconRes, 16, 16)?.let { iconBmp ->
+            canvas.drawBitmap(iconBmp, tipX - iconBmp.width / 2f, tipY - iconBmp.height / 2f, null)
         }
 
         val paintText = Paint().apply {
@@ -340,11 +420,6 @@ open class ScreenPulseWidgetProvider : AppWidgetProvider() {
             isAntiAlias = true
         }
 
-        val rect = RectF(16f, 16f, 144f, 144f)
-        canvas.drawArc(rect, 0f, 360f, false, paintTrack)
-        canvas.drawArc(rect, -90f, percentage * 3.6f, false, paintProgress)
-
-        // Draw percentage text
         canvas.drawText("${percentage}%", 80f, 85f, paintText)
         canvas.drawText("PİL", 80f, 112f, paintLabel)
 
@@ -362,25 +437,10 @@ open class ScreenPulseWidgetProvider : AppWidgetProvider() {
             "${minutes}dk"
         }
     }
-
-    override fun onAppWidgetOptionsChanged(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        appWidgetId: Int,
-        newOptions: Bundle
-    ) {
-        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
-        onUpdate(context, appWidgetManager, intArrayOf(appWidgetId))
-    }
-
-    override fun onDisabled(context: Context?) {
-        super.onDisabled(context)
-        job.cancel()
-    }
 }
 
-class ScreenPulseWidgetProvider2x2 : ScreenPulseWidgetProvider()
-class ScreenPulseWidgetProvider4x2 : ScreenPulseWidgetProvider()
-class ScreenPulseWidgetProvider4x4 : ScreenPulseWidgetProvider()
-class ScreenPulseWidgetProvider2x4 : ScreenPulseWidgetProvider()
-class ScreenPulseWidgetProvider1x4 : ScreenPulseWidgetProvider()
+class ScreenPulseWidgetProvider2x2 : ScreenPulseWidgetProvider(R.layout.widget_2x2)
+class ScreenPulseWidgetProvider4x2 : ScreenPulseWidgetProvider(R.layout.widget_4x2)
+class ScreenPulseWidgetProvider4x4 : ScreenPulseWidgetProvider(R.layout.widget_4x4)
+class ScreenPulseWidgetProvider2x4 : ScreenPulseWidgetProvider(R.layout.widget_2x4)
+class ScreenPulseWidgetProvider1x4 : ScreenPulseWidgetProvider(R.layout.widget_1x4)

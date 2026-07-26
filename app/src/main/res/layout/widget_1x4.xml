@@ -8,7 +8,7 @@
     android:padding="10dp"
     android:gravity="center_horizontal">
 
-    <View android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
+    <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
 
     <ImageView
         android:id="@+id/widget_sot_ring"
@@ -16,7 +16,7 @@
         android:layout_height="64dp"
         android:scaleType="fitCenter" />
 
-    <View android:layout_width="match_parent" android:layout_height="10dp" />
+    <FrameLayout android:layout_width="match_parent" android:layout_height="10dp" />
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -37,15 +37,23 @@
             android:id="@+id/widget_battery_icon"
             android:layout_width="16dp"
             android:layout_height="8dp"
-            android:layout_marginStart="4dp" />
+            android:layout_marginLeft="4dp" />
     </LinearLayout>
 
-    <View android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
+    <TextView
+        android:id="@+id/widget_cycle_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="12 dng"
+        android:textColor="#99AAB8E8"
+        android:textSize="9sp" />
+
+    <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
 
     <ImageView
+        android:id="@+id/widget_bolt_icon"
         android:layout_width="12dp"
-        android:layout_height="12dp"
-        android:src="@drawable/ic_widget_bolt" />
+        android:layout_height="12dp" />
 
     <TextView
         android:id="@+id/widget_sot_value"
@@ -65,6 +73,6 @@
         android:textColor="#66FFFFFF"
         android:textSize="9sp" />
 
-    <View android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
+    <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
 
 </LinearLayout>

@@ -21,19 +21,19 @@
             android:layout_height="wrap_content">
 
             <ImageView
+                android:id="@+id/widget_sun_icon"
                 android:layout_width="16dp"
                 android:layout_height="16dp"
-                android:src="@drawable/ic_widget_sun"
-                android:layout_alignParentStart="true" />
+                android:layout_alignParentLeft="true" />
 
             <ImageView
                 android:id="@+id/widget_battery_icon"
                 android:layout_width="26dp"
                 android:layout_height="13dp"
-                android:layout_alignParentEnd="true" />
+                android:layout_alignParentRight="true" />
         </RelativeLayout>
 
-        <View android:layout_width="match_parent" android:layout_height="4dp" />
+        <FrameLayout android:layout_width="match_parent" android:layout_height="4dp" />
 
         <ImageView
             android:id="@+id/widget_sot_ring"
@@ -43,10 +43,11 @@
     </LinearLayout>
 
     <!-- Right: divider + stacked stats -->
-    <View
+    <FrameLayout
         android:layout_width="1dp"
         android:layout_height="match_parent"
-        android:layout_marginHorizontal="4dp"
+        android:layout_marginLeft="4dp"
+        android:layout_marginRight="4dp"
         android:background="#14FFFFFF" />
 
     <LinearLayout
@@ -55,16 +56,33 @@
         android:layout_weight="1"
         android:orientation="vertical"
         android:gravity="center_vertical"
-        android:paddingStart="12dp">
+        android:paddingLeft="12dp">
 
-        <TextView
-            android:id="@+id/widget_battery"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="%55"
-            android:textColor="#FFFFFF"
-            android:textSize="22sp"
-            android:textStyle="bold" />
+            android:orientation="horizontal"
+            android:gravity="bottom">
+
+            <TextView
+                android:id="@+id/widget_battery"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="%55"
+                android:textColor="#FFFFFF"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/widget_cycle_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="8dp"
+                android:text="12 dng"
+                android:textColor="#99AAB8E8"
+                android:textSize="12sp"
+                android:layout_marginBottom="3dp" />
+        </LinearLayout>
 
         <TextView
             android:layout_width="wrap_content"
