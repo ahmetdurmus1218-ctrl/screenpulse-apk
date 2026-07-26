@@ -24,7 +24,13 @@ import kotlin.math.roundToLong
  */
 object NotificationHelper {
 
-    const val CHANNEL_ID = "screenpulse_lockscreen"
+    // v2: bumped from IMPORTANCE_LOW to IMPORTANCE_DEFAULT — on this device's launcher,
+    // LOW-importance notifications were being posted successfully (visible in the shade,
+    // AOD icon showing) but silently excluded from the actual lock screen list. A NEW
+    // channel ID is required here: Android does not let app code change the importance
+    // of a channel that already exists, so bumping the constant alone would do nothing
+    // for anyone who already had the old "screenpulse_lockscreen" channel created.
+    const val CHANNEL_ID = "screenpulse_lockscreen_v2"
     const val NOTIFICATION_ID = 4201
 
     fun ensureChannel(context: Context) {
@@ -33,12 +39,14 @@ object NotificationHelper {
         val channel = NotificationChannel(
             CHANNEL_ID,
             "Kilit Ekranı Özeti",
-            // LOW: shows on lock screen/AOD without sound, vibration, or a heads-up popup —
-            // the right importance level for a persistent status display, not an alert.
-            NotificationManager.IMPORTANCE_LOW
+            // DEFAULT: still no heads-up popup (that needs HIGH), but visible/eligible for
+            // lock screen display on OEM skins that filter LOW out of that list.
+            NotificationManager.IMPORTANCE_DEFAULT
         ).apply {
             description = "Pil yüzdesi ve ekran açık süresini kilit ekranında gösterir."
             setShowBadge(false)
+            enableVibration(false)
+            setSound(null, null)
         }
         manager.createNotificationChannel(channel)
     }
@@ -55,8 +63,8 @@ object NotificationHelper {
             .setContentTitle("ScreenPulse")
             .setContentText("Yükleniyor…")
             .setOngoing(true)
-            .setSilent(true)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setOnlyAlertOnce(true)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setContentIntent(pendingIntent)
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
@@ -97,8 +105,7 @@ object NotificationHelper {
             .setContentText(contentText)
             .setOngoing(ongoing)
             .setOnlyAlertOnce(true)
-            .setSilent(true)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setContentIntent(pendingIntent)
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
