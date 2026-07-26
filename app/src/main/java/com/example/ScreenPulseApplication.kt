@@ -4,6 +4,8 @@ import android.app.Application
 import com.example.data.database.ScreenPulseDatabase
 import com.example.data.datastore.SettingsManager
 import com.example.data.repository.UsageRepository
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 class ScreenPulseApplication : Application() {
 
@@ -25,6 +27,20 @@ class ScreenPulseApplication : Application() {
         repository = UsageRepository(this, database.usageDao(), settingsManager)
 
         schedulePeriodicBatteryStateCheck()
+        reapplyLockScreenNotificationMode()
+    }
+
+    private fun reapplyLockScreenNotificationMode() {
+        kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val mode = settingsManager.lockScreenNotificationMode.first()
+                if (mode != "off") {
+                    com.example.notification.LockScreenNotificationController.applyMode(this@ScreenPulseApplication, mode)
+                }
+            } catch (_: Throwable) {
+                // Non-critical — worst case the person re-toggles it from the app.
+            }
+        }
     }
 
     private fun schedulePeriodicBatteryStateCheck() {

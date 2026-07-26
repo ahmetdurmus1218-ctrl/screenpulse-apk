@@ -84,12 +84,44 @@ fun DashboardScreen(
                     })
                 } else {
                     val isDark by viewModel.isDarkTheme.collectAsState()
+                    val notificationMode by viewModel.lockScreenNotificationMode.collectAsState()
+
+                    val pendingNotificationMode = remember { mutableStateOf("off") }
+
+                    // Android 13+ requires this runtime permission before any notification —
+                    // including our lock-screen summary — can actually be shown.
+                    val notificationPermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+                        contract = androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+                    ) { granted ->
+                        if (granted) {
+                            viewModel.setLockScreenNotificationMode(context, pendingNotificationMode.value)
+                        }
+                    }
+
+                    val onSetNotificationMode: (String) -> Unit = { mode ->
+                        if (mode == "off" || android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU) {
+                            viewModel.setLockScreenNotificationMode(context, mode)
+                        } else {
+                            val alreadyGranted = androidx.core.content.ContextCompat.checkSelfPermission(
+                                context, android.Manifest.permission.POST_NOTIFICATIONS
+                            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                            if (alreadyGranted) {
+                                viewModel.setLockScreenNotificationMode(context, mode)
+                            } else {
+                                pendingNotificationMode.value = mode
+                                notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                            }
+                        }
+                    }
+
                     DashboardContent(
                         state = state,
                         onRefresh = { viewModel.refreshStats() },
                         onNavigateToApps = onNavigateToApps,
                         isDarkTheme = isDark,
-                        onToggleTheme = { viewModel.toggleDarkTheme() }
+                        onToggleTheme = { viewModel.toggleDarkTheme() },
+                        notificationMode = notificationMode,
+                        onSetNotificationMode = onSetNotificationMode
                     )
                 }
             }
@@ -164,7 +196,9 @@ fun DashboardContent(
     onRefresh: () -> Unit,
     onNavigateToApps: () -> Unit,
     isDarkTheme: Boolean = true,
-    onToggleTheme: () -> Unit = {}
+    onToggleTheme: () -> Unit = {},
+    notificationMode: String = "off",
+    onSetNotificationMode: (String) -> Unit = {}
 ) {
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
@@ -186,6 +220,12 @@ fun DashboardContent(
                 item { MostUsedAppsCard(state, onNavigateToApps) }
             }
             item { BatteryInfoCard(state, onRefresh) }
+            item {
+                LockScreenNotificationCard(
+                    currentMode = notificationMode,
+                    onSelectMode = onSetNotificationMode
+                )
+            }
             item { WidgetPreviewsSection(state) }
         }
     }
@@ -906,6 +946,110 @@ private fun MiniBatteryIcon(percentage: Int, small: Boolean = false) {
             size = Size((bodyRight - 4f) * (percentage / 100f), size.height - 4f),
             cornerRadius = CornerRadius(1f, 1f)
         )
+    }
+}
+
+/**
+ * Lets the person choose how (or whether) the compact battery + screen-time summary
+ * shows up as a notification — which, depending on their OEM's own notification
+ * display settings (the "Hatırlatma modu" screen in system settings), can then also
+ * surface on the lock screen / AOD. Deliberately a picker, not a single switch: the
+ * person explicitly asked for both an always-on and a battery-friendlier periodic
+ * option to choose between here in the app.
+ */
+@Composable
+private fun LockScreenNotificationCard(
+    currentMode: String,
+    onSelectMode: (String) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Outlined.Notifications,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    "Kilit Ekranı Bildirimi",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                "Pil % ve ekran açık süresini bildirim olarak gösterir. Cihazınızın bildirim ayarlarından kilit ekranı/AOD'de görünmesini açabilirsiniz.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            val options = listOf(
+                Triple("off", "Kapalı", Icons.Outlined.NotificationsOff),
+                Triple("continuous", "Sürekli Açık", Icons.Outlined.Bolt),
+                Triple("periodic", "Periyodik", Icons.Outlined.Schedule)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                options.forEach { (value, label, icon) ->
+                    val selected = currentMode == value
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(
+                                if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
+                                else Color.Transparent
+                            )
+                            .clickable { onSelectMode(value) }
+                            .padding(vertical = 12.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = label,
+                            tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            label,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            }
+
+            if (currentMode == "continuous") {
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    "Sürekli açık modda bildirim her zaman görünür kalır ve yaklaşık her dakika güncellenir.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else if (currentMode == "periodic") {
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    "Periyodik modda bildirim yaklaşık 15 dakikada bir güncellenir, daha az pil kullanır.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }
 

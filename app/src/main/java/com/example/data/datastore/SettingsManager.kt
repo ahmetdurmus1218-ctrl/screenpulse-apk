@@ -20,7 +20,21 @@ class SettingsManager(private val context: Context) {
         private val KEY_CHARGE_SESSION_START_LEVEL = intPreferencesKey("charge_session_start_level")
         private val KEY_CUMULATIVE_CHARGE_PERCENT = floatPreferencesKey("cumulative_charge_percent")
         private val KEY_PLUG_IN_COUNT = intPreferencesKey("plug_in_count")
+        private val KEY_LOCK_SCREEN_NOTIFICATION_MODE = stringPreferencesKey("lock_screen_notification_mode")
     }
+
+    /** Whether/how the compact battery+screen-time notification (shown on lock screen /
+     *  AOD depending on the OEM's own notification display settings) should run:
+     *  "off" (default), "continuous" (foreground service, updates ~every minute), or
+     *  "periodic" (WorkManager, updates ~every 15 min, more battery-friendly). */
+    val lockScreenNotificationMode: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[KEY_LOCK_SCREEN_NOTIFICATION_MODE] ?: "off"
+    }
+
+    suspend fun setLockScreenNotificationMode(mode: String) {
+        context.dataStore.edit { preferences ->
+            preferences[KEY_LOCK_SCREEN_NOTIFICATION_MODE] = mode
+        }
 
     /**
      * Running total of "% points charged" across every real charging session this app has

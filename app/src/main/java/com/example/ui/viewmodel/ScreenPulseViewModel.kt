@@ -49,6 +49,17 @@ class ScreenPulseViewModel(
     val isDarkTheme: StateFlow<Boolean> = settingsManager.isDarkTheme
         .stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.Eagerly, true)
 
+    val lockScreenNotificationMode: StateFlow<String> = settingsManager.lockScreenNotificationMode
+        .stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.Eagerly, "off")
+
+    /** Persists the choice and immediately starts/stops the underlying service/worker. */
+    fun setLockScreenNotificationMode(context: android.content.Context, mode: String) {
+        viewModelScope.launch {
+            settingsManager.setLockScreenNotificationMode(mode)
+            com.example.notification.LockScreenNotificationController.applyMode(context, mode)
+        }
+    }
+
     fun toggleDarkTheme() {
         viewModelScope.launch {
             settingsManager.setDarkTheme(!isDarkTheme.value)
