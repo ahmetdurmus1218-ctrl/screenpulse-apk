@@ -190,13 +190,18 @@ class UsageRepository(
         if (!hasUsageStatsPermission() || endTime <= startTime) {
             return 0L to 0L
         }
+        // Defensive cap: never query more than 7 days of history, no matter what a caller
+        // passes in. Protects against any uninitialized/epoch (0L / 1970) timestamp slipping
+        // through and forcing UsageStatsManager to enumerate the device's entire event
+        // history, which can hang for a very long time on an older, heavily-used phone.
+        val cappedStartTime = maxOf(startTime, endTime - 7L * 24 * 3600 * 1000L)
         val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-        val events = usageStatsManager.queryEvents(startTime, endTime)
+        val events = usageStatsManager.queryEvents(cappedStartTime, endTime)
         val event = android.app.usage.UsageEvents.Event()
 
         var onMs = 0L
         var offMs = 0L
-        var cursor = startTime
+        var cursor = cappedStartTime
         var screenOnNow: Boolean? = null // unknown until the first event tells us
 
         while (events.hasNextEvent()) {

@@ -24,7 +24,10 @@ import java.util.*
 open class ScreenPulseWidgetProvider : AppWidgetProvider() {
 
     private val job = SupervisorJob()
-    private val scope = CoroutineScope(Dispatchers.Main + job)
+    // BUG FIX: this used to run on Dispatchers.Main. queryEvents() below can iterate a large
+    // number of system events synchronously — on the Main dispatcher that blocks widget
+    // rendering. IO is the correct dispatcher for this kind of blocking system-service call.
+    private val scope = CoroutineScope(Dispatchers.IO + job)
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         // CRITICAL FIX: without goAsync(), Android is free to kill this process the moment
@@ -45,8 +48,13 @@ open class ScreenPulseWidgetProvider : AppWidgetProvider() {
 
                 // Fetch real telemetry
                 val batteryInfo = repository.getBatteryInfo()
-                val lastUnpluggedTime = settingsManager.lastUnpluggedTime.first()
+                val rawLastUnpluggedTime = settingsManager.lastUnpluggedTime.first()
                 val now = System.currentTimeMillis()
+                // 0L means "never initialized" (e.g. widget added before the app was ever
+                // opened, so initializeIfNeeded() in the app never ran). Querying from epoch
+                // to now can mean walking the device's *entire* recorded usage history, which
+                // can hang. Fall back to a safe recent window instead.
+                val lastUnpluggedTime = if (rawLastUnpluggedTime <= 0L) now - 4 * 3600 * 1000L else rawLastUnpluggedTime
 
                 // Real screen on/off split, same accurate source used by the app itself —
                 // NOT a sum of per-app foreground time (which can overcount).

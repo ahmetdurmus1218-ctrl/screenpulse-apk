@@ -5,4 +5,6 @@
     android:updatePeriodMillis="1800000"
     android:initialLayout="@layout/widget_1x4"
     android:resizeMode="horizontal|vertical"
+    android:targetCellWidth="1"
+    android:targetCellHeight="4"
     android:widgetCategory="home_screen" />
