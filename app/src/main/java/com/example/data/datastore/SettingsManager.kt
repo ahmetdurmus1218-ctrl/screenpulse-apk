@@ -35,6 +35,7 @@ class SettingsManager(private val context: Context) {
         context.dataStore.edit { preferences ->
             preferences[KEY_LOCK_SCREEN_NOTIFICATION_MODE] = mode
         }
+    }
 
     /**
      * Running total of "% points charged" across every real charging session this app has
