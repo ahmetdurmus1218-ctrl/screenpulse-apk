@@ -426,6 +426,34 @@ open class ScreenPulseWidgetProvider(
         return bitmap
     }
 
+    companion object {
+        fun updateAllWidgets(context: Context) {
+            try {
+                val appWidgetManager = AppWidgetManager.getInstance(context)
+                val providers = arrayOf(
+                    ScreenPulseWidgetProvider2x2::class.java,
+                    ScreenPulseWidgetProvider4x2::class.java,
+                    ScreenPulseWidgetProvider4x4::class.java,
+                    ScreenPulseWidgetProvider2x4::class.java,
+                    ScreenPulseWidgetProvider1x4::class.java
+                )
+                for (providerClass in providers) {
+                    val component = android.content.ComponentName(context, providerClass)
+                    val ids = appWidgetManager.getAppWidgetIds(component)
+                    if (ids.isNotEmpty()) {
+                        val intent = Intent(context, providerClass).apply {
+                            action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+                            putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+                        }
+                        context.sendBroadcast(intent)
+                    }
+                }
+            } catch (t: Throwable) {
+                t.printStackTrace()
+            }
+        }
+    }
+
     private fun formatWidgetTime(timeMs: Long): String {
         val totalSeconds = timeMs / 1000
         val totalMinutes = totalSeconds / 60
