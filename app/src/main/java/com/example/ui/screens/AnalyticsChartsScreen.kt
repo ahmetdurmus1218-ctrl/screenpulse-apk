@@ -232,6 +232,19 @@ fun AnalyticsChartsScreen(
                                     } else {
                                         val range = selectedRange!!
                                         val rangeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+
+                                        // Real measured battery % drop within this exact window, from the
+                                        // battery log points nearest the start/end — not a generic estimate.
+                                        val logsInOrder = state.batteryLogs.sortedBy { it.timestamp }
+                                        val batteryAtStart = logsInOrder.lastOrNull { it.timestamp <= range.first }?.batteryLevel
+                                            ?: logsInOrder.firstOrNull()?.batteryLevel
+                                        val batteryAtEnd = logsInOrder.lastOrNull { it.timestamp <= range.second }?.batteryLevel
+                                            ?: batteryAtStart
+                                        val realDropPct = if (batteryAtStart != null && batteryAtEnd != null) {
+                                            (batteryAtStart - batteryAtEnd).coerceAtLeast(0)
+                                        } else null
+                                        val totalActiveMs = selectedRangeApps.sumOf { it.foregroundTimeMs + it.backgroundTimeMs }
+
                                         Spacer(modifier = Modifier.height(14.dp))
                                         HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
                                         Spacer(modifier = Modifier.height(14.dp))
@@ -254,6 +267,14 @@ fun AnalyticsChartsScreen(
                                                     selectedRange = null
                                                     selectedRangeApps = emptyList()
                                                 }
+                                            )
+                                        }
+                                        if (realDropPct != null) {
+                                            Text(
+                                                text = "Bu aralıkta pil %$realDropPct düştü — aşağıdaki dağılım, her uygulamanın bu düşüşteki tahmini payı",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.padding(top = 4.dp)
                                             )
                                         }
                                         Spacer(modifier = Modifier.height(10.dp))
@@ -294,13 +315,24 @@ fun AnalyticsChartsScreen(
                                                             )
                                                         }
                                                         Spacer(modifier = Modifier.width(10.dp))
-                                                        Text(
-                                                            text = app.appName,
-                                                            style = MaterialTheme.typography.bodySmall,
-                                                            color = MaterialTheme.colorScheme.onSurface,
-                                                            modifier = Modifier.weight(1f)
-                                                        )
-                                                        val mins = app.screenTimeSinceChargeMs / 60000
+                                                        Column(modifier = Modifier.weight(1f)) {
+                                                            Text(
+                                                                text = app.appName,
+                                                                style = MaterialTheme.typography.bodySmall,
+                                                                color = MaterialTheme.colorScheme.onSurface
+                                                            )
+                                                            if (realDropPct != null && realDropPct > 0 && totalActiveMs > 0) {
+                                                                val appActiveMs = app.foregroundTimeMs + app.backgroundTimeMs
+                                                                val estPct = (realDropPct * (appActiveMs.toDouble() / totalActiveMs))
+                                                                Text(
+                                                                    text = "~%.1f%% pil".format(estPct),
+                                                                    style = MaterialTheme.typography.labelSmall,
+                                                                    color = Color(0xFFFF7043)
+                                                                )
+                                                            }
+                                                        }
+                                                        Spacer(modifier = Modifier.width(8.dp))
+                                                        val mins = (app.foregroundTimeMs + app.backgroundTimeMs) / 60000
                                                         val label = if (mins >= 60) {
                                                             "${mins / 60}sa ${mins % 60}dk"
                                                         } else {
