@@ -8,6 +8,7 @@ import android.content.IntentFilter
 import android.graphics.drawable.Drawable
 import android.os.BatteryManager
 import android.os.Build
+import com.example.data.database.BackgroundMediaLogEntity
 import com.example.data.database.BatteryLogEntity
 import com.example.data.database.UsageDao
 import com.example.data.database.UsageHistoryEntity

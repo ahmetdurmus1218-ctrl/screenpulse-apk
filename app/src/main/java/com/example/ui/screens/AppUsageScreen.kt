@@ -173,7 +173,7 @@ fun AppUsageScreen(
                             verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             items(filteredList, key = { it.packageName }) { item ->
-                                AppUsageRow(item = item)
+                                AppUsageRow(item = item, hasNotificationAccess = hasNotificationAccess)
                             }
                         }
                     }
@@ -184,7 +184,7 @@ fun AppUsageScreen(
 }
 
 @Composable
-fun AppUsageRow(item: AppUsageItem) {
+fun AppUsageRow(item: AppUsageItem, hasNotificationAccess: Boolean) {
     var expanded by remember { mutableStateOf(false) }
 
     Card(
