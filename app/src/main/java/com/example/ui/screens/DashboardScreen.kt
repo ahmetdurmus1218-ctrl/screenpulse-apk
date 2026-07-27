@@ -226,7 +226,7 @@ fun DashboardContent(
                     onSelectMode = onSetNotificationMode
                 )
             }
-            item { WidgetPreviewsSection(state, isDark) }
+            item { WidgetPreviewsSection(state, isDarkTheme) }
         }
     }
 }
