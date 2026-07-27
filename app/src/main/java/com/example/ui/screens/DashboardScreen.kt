@@ -226,6 +226,7 @@ fun DashboardContent(
                     onSelectMode = onSetNotificationMode
                 )
             }
+            item { BackgroundMediaAccessCard() }
             item { WidgetPreviewsSection(state, isDarkTheme) }
             item {
                 Text(
@@ -971,6 +972,94 @@ private fun MiniBatteryIcon(percentage: Int, small: Boolean = false, isDark: Boo
             size = Size((bodyRight - 4f) * (percentage / 100f), size.height - 4f),
             cornerRadius = CornerRadius(1f, 1f)
         )
+    }
+}
+
+/**
+ * Prompts for Notification Access, the one permission that lets us see real background
+ * media playback (e.g. YouTube/Spotify running with the screen off) via MediaSession —
+ * something regular screen-time tracking can never see, since it only knows about apps
+ * that were actually visible on screen.
+ */
+@Composable
+private fun BackgroundMediaAccessCard() {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var hasAccess by remember { mutableStateOf(false) }
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+
+    // Re-check whenever the screen resumes (e.g. coming back from the settings page
+    // after granting/revoking access), not just once on first composition.
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                hasAccess = android.provider.Settings.Secure.getString(
+                    context.contentResolver, "enabled_notification_listeners"
+                )?.contains(context.packageName) ?: false
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Outlined.MusicNote,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    "Arka Plan Medya Takibi",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                "YouTube, Spotify gibi uygulamaların ekran kapalıyken arka planda çalma süresini görmek için Bildirim Erişimi izni gerekir.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(14.dp))
+
+            if (hasAccess) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Outlined.CheckCircle,
+                        contentDescription = null,
+                        tint = Color(0xFF00C853),
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        "İzin verildi — takip aktif",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Color(0xFF00C853),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            } else {
+                Button(
+                    onClick = {
+                        context.startActivity(
+                            Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
+                        )
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Text("İzin Ver")
+                }
+            }
+        }
     }
 }
 

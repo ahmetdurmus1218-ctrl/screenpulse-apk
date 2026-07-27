@@ -69,6 +69,9 @@ class ScreenPulseViewModel(
         }
     }
 
+    fun hasNotificationAccess(context: android.content.Context): Boolean =
+        repository.hasNotificationAccess(context)
+
     fun toggleDarkTheme(context: android.content.Context) {
         viewModelScope.launch {
             settingsManager.setDarkTheme(!isDarkTheme.value)

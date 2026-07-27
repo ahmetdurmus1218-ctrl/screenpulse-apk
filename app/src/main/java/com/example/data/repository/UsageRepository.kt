@@ -266,7 +266,7 @@ class UsageRepository(
         settingsManager.setWasCharging(isChargingNow)
     }
 
-    fun getAppUsageList(startTime: Long, endTime: Long = System.currentTimeMillis()): List<AppUsageItem> {
+    suspend fun getAppUsageList(startTime: Long, endTime: Long = System.currentTimeMillis()): List<AppUsageItem> {
         if (!hasUsageStatsPermission()) return emptyList()
 
         val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
@@ -293,6 +293,14 @@ class UsageRepository(
         val filteredStats = stats.filter { it.value.totalTimeInForeground > 0 }
         for (stat in filteredStats.values) {
             totalForegroundSinceChargeMs += stat.totalTimeInForeground
+        }
+
+        // Real background playback time (e.g. YouTube/Spotify with the screen off),
+        // detected via MediaSession — requires Notification Access; empty map if not granted.
+        val mediaTotals = try {
+            usageDao.getBackgroundMediaTotals(startTime, endTime).associate { it.packageName to it.totalMs }
+        } catch (e: Exception) {
+            emptyMap()
         }
 
         for ((packageName, stat) in filteredStats) {
@@ -327,7 +335,7 @@ class UsageRepository(
                     todayUsageMs = todayUsageMs,
                     dailyAverageMs = dailyAverageMs,
                     foregroundTimeMs = screenTimeMs,
-                    backgroundTimeMs = 0L, // Standard Android does not expose package background time via UsageStats
+                    backgroundTimeMs = mediaTotals[packageName] ?: 0L,
                     estimatedBatteryUsagePct = pctOfTotal, // Estimated based on proportion of screen activity
                     percentageOfTotal = pctOfTotal,
                     icon = icon
@@ -335,7 +343,38 @@ class UsageRepository(
             )
         }
 
-        return list.sortedByDescending { it.screenTimeSinceChargeMs }
+        // Apps that only ever played media in the background (screen off the whole time,
+        // so zero foreground time) would otherwise never appear in this list at all.
+        val alreadyListedPackages = list.map { it.packageName }.toSet()
+        for ((packageName, mediaMs) in mediaTotals) {
+            if (packageName in alreadyListedPackages || mediaMs <= 0L) continue
+            var appLabel = packageName
+            var icon: Drawable? = null
+            try {
+                val appInfo = pm.getApplicationInfo(packageName, 0)
+                appLabel = pm.getApplicationLabel(appInfo).toString()
+                icon = pm.getApplicationIcon(appInfo)
+            } catch (e: Exception) {
+            }
+            list.add(
+                AppUsageItem(
+                    packageName = packageName,
+                    appName = appLabel,
+                    screenTimeSinceChargeMs = 0L,
+                    todayUsageMs = 0L,
+                    dailyAverageMs = 0L,
+                    foregroundTimeMs = 0L,
+                    backgroundTimeMs = mediaMs,
+                    estimatedBatteryUsagePct = 0.0,
+                    percentageOfTotal = 0.0,
+                    icon = icon
+                )
+            )
+        }
+
+        // Sort by total real usage (foreground + background) so apps that mostly ran in
+        // the background — like a music app — still rank sensibly, not just by screen time.
+        return list.sortedByDescending { it.foregroundTimeMs + it.backgroundTimeMs }
     }
 
     // Database Actions
@@ -365,5 +404,30 @@ class UsageRepository(
 
     suspend fun triggerPlugEvent() {
         settingsManager.saveLastChargeTime(System.currentTimeMillis())
+    }
+
+    // --- Background media playback tracking (requires Notification Access) ---
+
+    suspend fun openBackgroundMediaSession(packageName: String, startTime: Long): Long {
+        return usageDao.insertBackgroundMediaLog(
+            BackgroundMediaLogEntity(packageName = packageName, startTime = startTime, endTime = null)
+        )
+    }
+
+    suspend fun closeBackgroundMediaSession(id: Long, endTime: Long) {
+        usageDao.closeBackgroundMediaLog(id, endTime)
+    }
+
+    suspend fun closeDanglingBackgroundMediaSessions(exceptId: Long = -1) {
+        usageDao.closeDanglingBackgroundMediaLogs(System.currentTimeMillis(), exceptId)
+    }
+
+    suspend fun getBackgroundMediaTotals(start: Long, end: Long) = usageDao.getBackgroundMediaTotals(start, end)
+
+    fun hasNotificationAccess(context: Context): Boolean {
+        val enabledListeners = android.provider.Settings.Secure.getString(
+            context.contentResolver, "enabled_notification_listeners"
+        ) ?: return false
+        return enabledListeners.contains(context.packageName)
     }
 }

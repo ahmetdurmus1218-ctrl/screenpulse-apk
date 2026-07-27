@@ -42,6 +42,8 @@ fun AppUsageScreen(
     val uiState by viewModel.uiState.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val sortBy by viewModel.sortBy.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val hasNotificationAccess = remember { viewModel.hasNotificationAccess(context) }
 
     var showSortMenu by remember { mutableStateOf(false) }
 
@@ -287,7 +289,10 @@ fun AppUsageRow(item: AppUsageItem) {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         UsageDetailItem(label = "Ön Planda Kullanım", value = formatTime(item.foregroundTimeMs))
-                        UsageDetailItem(label = "Arka Plan Kullanımı", value = "Desteklenmiyor") // Indicated as unsupported
+                        UsageDetailItem(
+                            label = "Arka Plan Kullanımı",
+                            value = if (hasNotificationAccess) formatTime(item.backgroundTimeMs) else "İzin gerekli"
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
