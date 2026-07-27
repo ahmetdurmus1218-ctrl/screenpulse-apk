@@ -226,7 +226,7 @@ fun DashboardContent(
                     onSelectMode = onSetNotificationMode
                 )
             }
-            item { WidgetPreviewsSection(state) }
+            item { WidgetPreviewsSection(state, isDark) }
         }
     }
 }
@@ -764,7 +764,12 @@ fun formatTime(timeMs: Long): String {
 // ─────────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun WidgetPreviewsSection(state: MainUiState.Success) {
+private fun WidgetPreviewsSection(state: MainUiState.Success, isDark: Boolean) {
+    val textPrimary = if (isDark) Color.White else Color(0xFF1A1A2E)
+    val textDim = if (isDark) Color.White.copy(alpha = 0.5f) else Color.Black.copy(alpha = 0.5f)
+    val textDimmer = if (isDark) Color.White.copy(alpha = 0.6f) else Color.Black.copy(alpha = 0.6f)
+    val dividerColor = if (isDark) Color.White.copy(alpha = 0.1f) else Color.Black.copy(alpha = 0.1f)
+
     Column {
         Text(
             text = "Widget Örnekleri",
@@ -779,7 +784,7 @@ private fun WidgetPreviewsSection(state: MainUiState.Success) {
             contentPadding = PaddingValues(horizontal = 4.dp)
         ) {
             item {
-                WidgetPreviewFrame(label = "4x2 Widget", width = 220.dp, height = 110.dp) {
+                WidgetPreviewFrame(label = "4x2 Widget", width = 220.dp, height = 110.dp, isDark = isDark) {
                     Row(
                         modifier = Modifier.fillMaxSize().padding(14.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -789,71 +794,71 @@ private fun WidgetPreviewsSection(state: MainUiState.Success) {
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Icon(Icons.Outlined.WbSunny, null, tint = Color(0xFFFFC857), modifier = Modifier.align(Alignment.Start).size(14.dp))
-                            MiniRing(state, size = 62.dp)
+                            MiniRing(state, size = 62.dp, isDark = isDark)
                         }
                         Column(horizontalAlignment = Alignment.End, modifier = Modifier.padding(start = 8.dp)) {
-                            Text("%${state.batteryInfo.percentage}", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                            Text("Pil Seviyesi", color = Color.White.copy(alpha = 0.5f), fontSize = 8.sp)
+                            Text("%${state.batteryInfo.percentage}", color = textPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                            Text("Pil Seviyesi", color = textDim, fontSize = 8.sp)
                             Spacer(Modifier.height(8.dp))
                             Text(formatTime(state.timeSinceLastChargeMs), color = Color(0xFF7A97FF), fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                            Text("Şarjdan Beri", color = Color.White.copy(alpha = 0.5f), fontSize = 8.sp)
+                            Text("Şarjdan Beri", color = textDim, fontSize = 8.sp)
                         }
                     }
                 }
             }
             item {
-                WidgetPreviewFrame(label = "2x2 Widget", width = 130.dp, height = 130.dp) {
+                WidgetPreviewFrame(label = "2x2 Widget", width = 130.dp, height = 130.dp, isDark = isDark) {
                     Column(
                         modifier = Modifier.fillMaxSize().padding(10.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        MiniRing(state, size = 66.dp)
+                        MiniRing(state, size = 66.dp, isDark = isDark)
                         Spacer(Modifier.height(8.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("%${state.batteryInfo.percentage}", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Text("%${state.batteryInfo.percentage}", color = textPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                             Spacer(Modifier.width(4.dp))
-                            MiniBatteryIcon(state.batteryInfo.percentage)
+                            MiniBatteryIcon(state.batteryInfo.percentage, isDark = isDark)
                         }
                     }
                 }
             }
             item {
-                WidgetPreviewFrame(label = "2x4 Widget", width = 130.dp, height = 220.dp) {
+                WidgetPreviewFrame(label = "2x4 Widget", width = 130.dp, height = 220.dp, isDark = isDark) {
                     Column(modifier = Modifier.fillMaxSize().padding(14.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Outlined.WbSunny, null, tint = Color(0xFFFFC857), modifier = Modifier.size(12.dp))
                             Spacer(Modifier.width(4.dp))
-                            Text("Son Şarjdan Beri", color = Color.White.copy(alpha = 0.6f), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                            Text("Son Şarjdan Beri", color = textDimmer, fontSize = 9.sp, fontWeight = FontWeight.Bold)
                         }
                         Spacer(Modifier.weight(1f))
-                        Text(formatTime(state.screenOnTimeMs), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text(formatTime(state.screenOnTimeMs), color = textPrimary, fontWeight = FontWeight.Bold, fontSize = 22.sp)
                         Text("Ekran Açık Süresi", color = Color(0xFF7A97FF), fontSize = 9.sp, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.weight(1f))
-                        HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+                        HorizontalDivider(color = dividerColor)
                         Spacer(Modifier.height(10.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("%${state.batteryInfo.percentage}", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Text("%${state.batteryInfo.percentage}", color = textPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                             Spacer(Modifier.width(4.dp))
-                            MiniBatteryIcon(state.batteryInfo.percentage)
+                            MiniBatteryIcon(state.batteryInfo.percentage, isDark = isDark)
                         }
-                        Text("Pil Seviyesi", color = Color.White.copy(alpha = 0.5f), fontSize = 8.sp)
+                        Text("Pil Seviyesi", color = textDim, fontSize = 8.sp)
                     }
                 }
             }
             item {
-                WidgetPreviewFrame(label = "1x4 Widget", width = 88.dp, height = 220.dp) {
+                WidgetPreviewFrame(label = "1x4 Widget", width = 88.dp, height = 220.dp, isDark = isDark) {
                     Column(
                         modifier = Modifier.fillMaxSize().padding(8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Spacer(Modifier.weight(1f))
-                        MiniRing(state, size = 48.dp)
+                        MiniRing(state, size = 48.dp, isDark = isDark)
                         Spacer(Modifier.height(8.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("%${state.batteryInfo.percentage}", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                            Text("%${state.batteryInfo.percentage}", color = textPrimary, fontWeight = FontWeight.Bold, fontSize = 11.sp)
                             Spacer(Modifier.width(3.dp))
-                            MiniBatteryIcon(state.batteryInfo.percentage, small = true)
+                            MiniBatteryIcon(state.batteryInfo.percentage, small = true, isDark = isDark)
                         }
                         Spacer(Modifier.weight(1f))
                         Icon(Icons.Outlined.Bolt, null, tint = Color(0xFFFFC857), modifier = Modifier.size(12.dp))
@@ -864,7 +869,7 @@ private fun WidgetPreviewsSection(state: MainUiState.Success) {
                             fontSize = 10.sp,
                             textAlign = TextAlign.Center
                         )
-                        Text("Şarjdan Beri", color = Color.White.copy(alpha = 0.5f), fontSize = 7.sp)
+                        Text("Şarjdan Beri", color = textDim, fontSize = 7.sp)
                         Spacer(Modifier.weight(1f))
                     }
                 }
@@ -878,6 +883,7 @@ private fun WidgetPreviewFrame(
     label: String,
     width: androidx.compose.ui.unit.Dp,
     height: androidx.compose.ui.unit.Dp,
+    isDark: Boolean,
     content: @Composable BoxScope.() -> Unit
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -888,10 +894,18 @@ private fun WidgetPreviewFrame(
                 .clip(RoundedCornerShape(24.dp))
                 .background(
                     Brush.linearGradient(
-                        colors = listOf(Color(0xFF181B26), Color(0xFF12141C), Color(0xFF08090D))
+                        colors = if (isDark) {
+                            listOf(Color(0xFF181B26), Color(0xFF12141C), Color(0xFF08090D))
+                        } else {
+                            listOf(Color(0xFFFFFFFF), Color(0xFFF7F8FC), Color(0xFFEDEFF7))
+                        }
                     )
                 )
-                .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(24.dp)),
+                .border(
+                    1.dp,
+                    if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.1f),
+                    RoundedCornerShape(24.dp)
+                ),
             content = content
         )
         Spacer(Modifier.height(8.dp))
@@ -900,7 +914,7 @@ private fun WidgetPreviewFrame(
 }
 
 @Composable
-private fun MiniRing(state: MainUiState.Success, size: androidx.compose.ui.unit.Dp) {
+private fun MiniRing(state: MainUiState.Success, size: androidx.compose.ui.unit.Dp, isDark: Boolean) {
     val total = (state.screenOnTimeMs + state.screenOffTimeMs).toFloat()
     val onPct = if (total > 0) state.screenOnTimeMs / total else 0f
     Box(modifier = Modifier.size(size), contentAlignment = Alignment.Center) {
@@ -919,7 +933,7 @@ private fun MiniRing(state: MainUiState.Success, size: androidx.compose.ui.unit.
         }
         Text(
             formatTime(state.screenOnTimeMs),
-            color = Color.White,
+            color = if (isDark) Color.White else Color(0xFF1A1A2E),
             fontWeight = FontWeight.Bold,
             fontSize = (size.value * 0.16f).sp,
             textAlign = TextAlign.Center
@@ -928,13 +942,13 @@ private fun MiniRing(state: MainUiState.Success, size: androidx.compose.ui.unit.
 }
 
 @Composable
-private fun MiniBatteryIcon(percentage: Int, small: Boolean = false) {
+private fun MiniBatteryIcon(percentage: Int, small: Boolean = false, isDark: Boolean = true) {
     val w = if (small) 16.dp else 20.dp
     val h = if (small) 8.dp else 10.dp
     Canvas(modifier = Modifier.size(width = w, height = h)) {
         val bodyRight = size.width - 3f
         drawRoundRect(
-            color = Color.White.copy(alpha = 0.5f),
+            color = if (isDark) Color.White.copy(alpha = 0.5f) else Color.Black.copy(alpha = 0.5f),
             topLeft = Offset(0f, 0f),
             size = Size(bodyRight, size.height),
             cornerRadius = CornerRadius(2f, 2f),
