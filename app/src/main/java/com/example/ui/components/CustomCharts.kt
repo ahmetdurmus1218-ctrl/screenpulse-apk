@@ -214,6 +214,11 @@ fun BatteryDrainChart(
     Canvas(modifier = modifier) {
         val width = size.width
         val height = size.height
+        // Reserve a dedicated bottom strip exclusively for the time-axis labels, so the
+        // "0%" gridline label and the first time label (both previously anchored to the
+        // very bottom of the canvas) no longer land on top of each other.
+        val bottomAxisHeight = 16.dp.toPx()
+        val plotHeight = height - bottomAxisHeight
 
         val minTime = activeLogs.first().timestamp
         val maxTime = activeLogs.last().timestamp
@@ -225,14 +230,14 @@ fun BatteryDrainChart(
             } else {
                 0f
             }
-            val y = height - (log.batteryLevel / 100f) * height
+            val y = plotHeight - (log.batteryLevel / 100f) * plotHeight
             Offset(x, y)
         }
 
         // Draw horizontal grid lines with percentage labels (100/75/50/25/0)
         val textStyle = TextStyle(color = onSurface.copy(alpha = 0.55f), fontSize = 10.sp)
         for (i in 0..4) {
-            val gridY = height * (i / 4f)
+            val gridY = plotHeight * (i / 4f)
             if (i in 1..3) {
                 drawLine(
                     color = onSurface.copy(alpha = 0.1f),
@@ -245,7 +250,7 @@ fun BatteryDrainChart(
             drawText(
                 textMeasurer = textMeasurer,
                 text = pctLabel,
-                topLeft = Offset(8.dp.toPx(), (gridY - 12.dp.toPx()).coerceIn(0f, height - 14.dp.toPx())),
+                topLeft = Offset(8.dp.toPx(), (gridY - 12.dp.toPx()).coerceIn(0f, plotHeight - 14.dp.toPx())),
                 style = textStyle
             )
         }
@@ -274,8 +279,8 @@ fun BatteryDrainChart(
         if (points.isNotEmpty()) {
             val fillPath = Path().apply {
                 addPath(path)
-                lineTo(width, height)
-                lineTo(0f, height)
+                lineTo(width, plotHeight)
+                lineTo(0f, plotHeight)
                 close()
             }
             drawPath(
@@ -289,7 +294,8 @@ fun BatteryDrainChart(
             )
         }
 
-        // Draw X Axis time labels (first, middle, last real log timestamps)
+        // Draw X Axis time labels (first, middle, last real log timestamps) — in their
+        // own reserved strip below the plot, clear of the percentage labels above.
         val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
         val xLabelStyle = TextStyle(color = onSurface.copy(alpha = 0.55f), fontSize = 10.sp)
         val labelIndices = listOf(0, activeLogs.size / 2, activeLogs.size - 1).distinct()
@@ -302,7 +308,7 @@ fun BatteryDrainChart(
             drawText(
                 textMeasurer = textMeasurer,
                 text = label,
-                topLeft = Offset(labelX, height - 14.dp.toPx()),
+                topLeft = Offset(labelX, plotHeight + 2.dp.toPx()),
                 style = xLabelStyle
             )
         }
