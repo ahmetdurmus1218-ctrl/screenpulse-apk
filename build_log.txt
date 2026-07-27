@@ -1,39 +1,39 @@
 Starting a Gradle Daemon (subsequent builds will be faster)
 Calculating task graph as no cached configuration is available for tasks: assembleDebug
-> Task :app:preBuild UP-TO-DATE
 > Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:preBuild UP-TO-DATE
 > Task :app:preDebugBuild UP-TO-DATE
 > Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
-> Task :app:generateDebugBuildConfig FROM-CACHE
-> Task :app:processDebugGoogleServices FROM-CACHE
 > Task :app:generateDebugResources FROM-CACHE
+> Task :app:processDebugGoogleServices FROM-CACHE
 > Task :app:javaPreCompileDebug FROM-CACHE
 > Task :app:packageDebugResources FROM-CACHE
+> Task :app:generateDebugBuildConfig
 > Task :app:processDebugNavigationResources FROM-CACHE
-> Task :app:checkDebugDuplicateClasses
-> Task :app:mergeDebugAssets
-> Task :app:desugarDebugFileDependencies FROM-CACHE
-> Task :app:compressDebugAssets FROM-CACHE
-> Task :app:mergeLibDexDebug FROM-CACHE
 > Task :app:parseDebugLocalResources FROM-CACHE
 > Task :app:generateDebugRFile FROM-CACHE
+> Task :app:desugarDebugFileDependencies FROM-CACHE
+> Task :app:checkDebugDuplicateClasses
+> Task :app:mergeDebugAssets
+> Task :app:compressDebugAssets FROM-CACHE
+> Task :app:mergeLibDexDebug FROM-CACHE
 > Task :app:mapDebugSourceSetPaths
 > Task :app:compileDebugNavigationResources FROM-CACHE
 > Task :app:checkDebugAarMetadata
 > Task :app:createDebugCompatibleScreenManifests
 > Task :app:extractDeepLinksDebug FROM-CACHE
 > Task :app:mergeDebugResources FROM-CACHE
-> Task :app:processDebugMainManifest FROM-CACHE
-> Task :app:processDebugManifest FROM-CACHE
 > Task :app:mergeDebugJniLibFolders
-> Task :app:processDebugManifestForPackage FROM-CACHE
 > Task :app:mergeDebugNativeLibs
-> Task :app:processDebugResources FROM-CACHE
+> Task :app:stripDebugDebugSymbols
 > Task :app:validateSigningDebug
 > Task :app:writeDebugAppMetadata
 > Task :app:writeDebugSigningConfigVersions
+> Task :app:processDebugMainManifest
 > Task :app:mergeExtDexDebug FROM-CACHE
-> Task :app:stripDebugDebugSymbols
+> Task :app:processDebugManifest
+> Task :app:processDebugManifestForPackage
+> Task :app:processDebugResources
 > Task :app:kspDebugKotlin
 
 > Task :app:compileDebugKotlin
@@ -60,8 +60,8 @@ See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
 > Task :app:packageDebug
 > Task :app:assembleDebug
 > Task :app:createDebugApkListingFileRedirect
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1785133355864.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1785134681258.json
 
-BUILD SUCCESSFUL in 50s
-39 actionable tasks: 20 executed, 19 from cache
+BUILD SUCCESSFUL in 43s
+39 actionable tasks: 25 executed, 14 from cache
 Configuration cache entry stored.
