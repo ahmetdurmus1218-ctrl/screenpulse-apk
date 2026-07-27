@@ -100,6 +100,12 @@ open class ScreenPulseWidgetProvider(
                 val cleanScreenOn = if (realScreenOn > cleanTimeSinceCharge) cleanTimeSinceCharge else realScreenOn
                 val cleanScreenOff = (cleanTimeSinceCharge - cleanScreenOn).coerceAtLeast(0L)
 
+                val isDark = try {
+                    settingsManager.isDarkTheme.first()
+                } catch (t: Throwable) {
+                    true
+                }
+
                 appWidgetIds.forEach { widgetId ->
                     val views = populateWidgetViews(
                         context = context,
@@ -107,7 +113,8 @@ open class ScreenPulseWidgetProvider(
                         batteryInfo = batteryInfo,
                         screenOnMs = cleanScreenOn,
                         screenOffMs = cleanScreenOff,
-                        timeSinceChargeMs = cleanTimeSinceCharge
+                        timeSinceChargeMs = cleanTimeSinceCharge,
+                        isDark = isDark
                     )
 
                     val intent = Intent(context, MainActivity::class.java)
@@ -137,9 +144,22 @@ open class ScreenPulseWidgetProvider(
         batteryInfo: BatteryInfo,
         screenOnMs: Long,
         screenOffMs: Long,
-        timeSinceChargeMs: Long
+        timeSinceChargeMs: Long,
+        isDark: Boolean
     ): RemoteViews {
         val views = RemoteViews(context.packageName, targetLayoutResId)
+        views.setInt(
+            R.id.widget_root,
+            "setBackgroundResource",
+            if (isDark) R.drawable.widget_background else R.drawable.widget_background_light
+        )
+
+        // Same semantic roles used consistently across every widget layout's XML —
+        // just swapped for light-background-appropriate values when isDark is false.
+        val colorPrimary = if (isDark) Color.parseColor("#FFFFFF") else Color.parseColor("#1A1A2E")
+        val colorSecondary = if (isDark) Color.parseColor("#99AAB8E8") else Color.parseColor("#995A6478")
+        val colorDim = if (isDark) Color.parseColor("#66FFFFFF") else Color.parseColor("#66000000")
+        val colorAccent = Color.parseColor("#7A97FF") // brand blue reads fine on both backgrounds
 
         val sotStr = formatWidgetTime(screenOnMs)
         val soffStr = formatWidgetTime(screenOffMs)
@@ -150,7 +170,7 @@ open class ScreenPulseWidgetProvider(
             "Şarj: Bilinmiyor"
         }
 
-        val batteryIconBitmap = drawMiniBatteryIcon(batteryInfo.percentage, batteryInfo.isCharging)
+        val batteryIconBitmap = drawMiniBatteryIcon(batteryInfo.percentage, batteryInfo.isCharging, isDark)
 
         val cycleCountVal = if (batteryInfo.hardwareCycleCount > 0) batteryInfo.hardwareCycleCount else batteryInfo.cycleCount.coerceAtLeast(0)
         val cycleStr = "${cycleCountVal} dng"
@@ -159,19 +179,25 @@ open class ScreenPulseWidgetProvider(
         when (targetLayoutResId) {
             R.layout.widget_1x4 -> {
                 views.setTextViewText(R.id.widget_battery, "%${batteryInfo.percentage}")
+                views.setTextColor(R.id.widget_battery, colorPrimary)
                 views.setTextViewText(R.id.widget_cycle_value, cycleStr)
+                views.setTextColor(R.id.widget_cycle_value, colorSecondary)
                 views.setImageViewBitmap(R.id.widget_battery_icon, batteryIconBitmap)
                 views.setTextViewText(R.id.widget_sot_value, sinceChargeStr)
+                views.setTextColor(R.id.widget_sot_value, colorAccent)
                 getVectorBitmap(context, R.drawable.ic_widget_bolt, 12, 12)?.let {
                     views.setImageViewBitmap(R.id.widget_bolt_icon, it)
                 }
-                val ring = drawScreenTimeRing(context, sotStr, screenOnMs, screenOffMs, compact = true)
+                val ring = drawScreenTimeRing(context, sotStr, screenOnMs, screenOffMs, compact = true, isDark = isDark)
                 views.setImageViewBitmap(R.id.widget_sot_ring, ring)
             }
             R.layout.widget_2x4 -> {
                 views.setTextViewText(R.id.widget_sot_value, sotStr)
+                views.setTextColor(R.id.widget_sot_value, colorPrimary)
                 views.setTextViewText(R.id.widget_battery, "%${batteryInfo.percentage}")
+                views.setTextColor(R.id.widget_battery, colorPrimary)
                 views.setTextViewText(R.id.widget_cycle_value, cycleDotStr)
+                views.setTextColor(R.id.widget_cycle_value, colorSecondary)
                 views.setImageViewBitmap(R.id.widget_battery_icon, batteryIconBitmap)
                 getVectorBitmap(context, R.drawable.ic_widget_sun, 14, 14)?.let {
                     views.setImageViewBitmap(R.id.widget_sun_icon, it)
@@ -179,8 +205,11 @@ open class ScreenPulseWidgetProvider(
             }
             R.layout.widget_4x4 -> {
                 views.setTextViewText(R.id.widget_sot_value, sotStr)
+                views.setTextColor(R.id.widget_sot_value, colorPrimary)
                 views.setTextViewText(R.id.widget_screen_off_value, soffStr)
+                views.setTextColor(R.id.widget_screen_off_value, colorPrimary)
                 views.setTextViewText(R.id.widget_last_charge_time, lastChargeStr)
+                views.setTextColor(R.id.widget_last_charge_time, colorDim)
                 getVectorBitmap(context, R.drawable.ic_widget_pulse, 14, 14)?.let {
                     views.setImageViewBitmap(R.id.widget_pulse_icon, it)
                 }
@@ -188,30 +217,38 @@ open class ScreenPulseWidgetProvider(
                     R.id.widget_temp_value,
                     String.format(Locale.getDefault(), "%.1f°C", batteryInfo.temperature)
                 )
+                views.setTextColor(R.id.widget_temp_value, colorPrimary)
                 views.setTextViewText(
                     R.id.widget_voltage_value,
                     String.format(Locale.getDefault(), "%.1fV", batteryInfo.voltage)
                 )
+                views.setTextColor(R.id.widget_voltage_value, colorPrimary)
                 views.setTextViewText(R.id.widget_cycle_value, cycleStr)
-                val bitmap = drawCircularBattery(context, batteryInfo.percentage, batteryInfo.isCharging)
+                views.setTextColor(R.id.widget_cycle_value, colorPrimary)
+                val bitmap = drawCircularBattery(context, batteryInfo.percentage, batteryInfo.isCharging, isDark = isDark)
                 views.setImageViewBitmap(R.id.widget_battery_circle, bitmap)
             }
             R.layout.widget_4x2 -> {
                 views.setTextViewText(R.id.widget_battery, "%${batteryInfo.percentage}")
+                views.setTextColor(R.id.widget_battery, colorPrimary)
                 views.setTextViewText(R.id.widget_cycle_value, cycleStr)
+                views.setTextColor(R.id.widget_cycle_value, colorSecondary)
                 views.setTextViewText(R.id.widget_sot_value, sinceChargeStr)
+                views.setTextColor(R.id.widget_sot_value, colorAccent)
                 views.setImageViewBitmap(R.id.widget_battery_icon, batteryIconBitmap)
                 getVectorBitmap(context, R.drawable.ic_widget_sun, 16, 16)?.let {
                     views.setImageViewBitmap(R.id.widget_sun_icon, it)
                 }
-                val ring = drawScreenTimeRing(context, sotStr, screenOnMs, screenOffMs, compact = false)
+                val ring = drawScreenTimeRing(context, sotStr, screenOnMs, screenOffMs, compact = false, isDark = isDark)
                 views.setImageViewBitmap(R.id.widget_sot_ring, ring)
             }
             else -> { // widget_2x2
                 views.setTextViewText(R.id.widget_battery, "%${batteryInfo.percentage}")
+                views.setTextColor(R.id.widget_battery, colorPrimary)
                 views.setTextViewText(R.id.widget_cycle_value, cycleStr)
+                views.setTextColor(R.id.widget_cycle_value, colorSecondary)
                 views.setImageViewBitmap(R.id.widget_battery_icon, batteryIconBitmap)
-                val ring = drawScreenTimeRing(context, sotStr, screenOnMs, screenOffMs, compact = true)
+                val ring = drawScreenTimeRing(context, sotStr, screenOnMs, screenOffMs, compact = true, isDark = isDark)
                 views.setImageViewBitmap(R.id.widget_sot_ring, ring)
             }
         }
@@ -235,7 +272,7 @@ open class ScreenPulseWidgetProvider(
         }
     }
 
-    private fun drawMiniBatteryIcon(percentage: Int, isCharging: Boolean): Bitmap {
+    private fun drawMiniBatteryIcon(percentage: Int, isCharging: Boolean, isDark: Boolean): Bitmap {
         val w = 120
         val h = 60
         val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
@@ -246,8 +283,9 @@ open class ScreenPulseWidgetProvider(
         val nubHeight = h * 0.4f
         val strokeW = 5f
 
+        val outlineColor = if (isDark) Color.parseColor("#66FFFFFF") else Color.parseColor("#66000000")
         val outlinePaint = Paint().apply {
-            color = Color.parseColor("#66FFFFFF")
+            color = outlineColor
             style = Paint.Style.STROKE
             strokeWidth = strokeW
             isAntiAlias = true
@@ -256,7 +294,7 @@ open class ScreenPulseWidgetProvider(
         canvas.drawRoundRect(bodyRect, 10f, 10f, outlinePaint)
 
         val nubPaint = Paint().apply {
-            color = Color.parseColor("#66FFFFFF")
+            color = outlineColor
             style = Paint.Style.FILL
             isAntiAlias = true
         }
@@ -278,7 +316,7 @@ open class ScreenPulseWidgetProvider(
         return bitmap
     }
 
-    private fun drawScreenTimeRing(context: Context, valueLabel: String, screenOnMs: Long, screenOffMs: Long, compact: Boolean): Bitmap {
+    private fun drawScreenTimeRing(context: Context, valueLabel: String, screenOnMs: Long, screenOffMs: Long, compact: Boolean, isDark: Boolean): Bitmap {
         val size = 200
         val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
@@ -291,7 +329,7 @@ open class ScreenPulseWidgetProvider(
         val rect = RectF(pad, pad, size - pad, size - pad)
 
         val paintTrack = Paint().apply {
-            color = Color.parseColor("#336F98FF")
+            color = if (isDark) Color.parseColor("#336F98FF") else Color.parseColor("#332B66FF")
             style = Paint.Style.STROKE
             strokeWidth = ringStrokeWidth
             strokeCap = Paint.Cap.ROUND
@@ -305,7 +343,7 @@ open class ScreenPulseWidgetProvider(
             isAntiAlias = true
         }
         val paintText = Paint().apply {
-            color = Color.WHITE
+            color = if (isDark) Color.WHITE else Color.parseColor("#1A1A2E")
             textSize = if (compact) 28f else 34f
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             textAlign = Paint.Align.CENTER
@@ -353,7 +391,7 @@ open class ScreenPulseWidgetProvider(
         return bitmap
     }
 
-    private fun drawCircularBattery(context: Context, percentage: Int, isCharging: Boolean): Bitmap {
+    private fun drawCircularBattery(context: Context, percentage: Int, isCharging: Boolean, isDark: Boolean): Bitmap {
         val size = 160
         val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
@@ -362,7 +400,7 @@ open class ScreenPulseWidgetProvider(
         val rect = RectF(pad, pad, size - pad, size - pad)
 
         val paintTrack = Paint().apply {
-            color = Color.parseColor("#15FFFFFF")
+            color = if (isDark) Color.parseColor("#15FFFFFF") else Color.parseColor("#15000000")
             style = Paint.Style.STROKE
             strokeWidth = 14f
             isAntiAlias = true
@@ -405,7 +443,7 @@ open class ScreenPulseWidgetProvider(
         }
 
         val paintText = Paint().apply {
-            color = Color.WHITE
+            color = if (isDark) Color.WHITE else Color.parseColor("#1A1A2E")
             textSize = 34f
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             textAlign = Paint.Align.CENTER
@@ -413,7 +451,7 @@ open class ScreenPulseWidgetProvider(
         }
 
         val paintLabel = Paint().apply {
-            color = Color.parseColor("#88FFFFFF")
+            color = if (isDark) Color.parseColor("#88FFFFFF") else Color.parseColor("#88000000")
             textSize = 18f
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
             textAlign = Paint.Align.CENTER
