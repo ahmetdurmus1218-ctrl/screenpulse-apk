@@ -119,7 +119,7 @@ fun DashboardScreen(
                         onRefresh = { viewModel.refreshStats() },
                         onNavigateToApps = onNavigateToApps,
                         isDarkTheme = isDark,
-                        onToggleTheme = { viewModel.toggleDarkTheme() },
+                        onToggleTheme = { viewModel.toggleDarkTheme(context) },
                         notificationMode = notificationMode,
                         onSetNotificationMode = onSetNotificationMode
                     )

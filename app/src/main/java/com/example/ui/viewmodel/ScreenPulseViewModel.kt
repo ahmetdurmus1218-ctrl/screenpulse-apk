@@ -60,9 +60,10 @@ class ScreenPulseViewModel(
         }
     }
 
-    fun toggleDarkTheme() {
+    fun toggleDarkTheme(context: android.content.Context) {
         viewModelScope.launch {
             settingsManager.setDarkTheme(!isDarkTheme.value)
+            com.example.widget.ScreenPulseWidgetProvider.updateAllWidgets(context)
         }
     }
 
