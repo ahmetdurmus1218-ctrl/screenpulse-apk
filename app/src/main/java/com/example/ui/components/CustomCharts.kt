@@ -287,6 +287,36 @@ fun BatteryDrainChart(
             Offset(x, y)
         }
 
+        val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+        val xLabelStyle = TextStyle(color = onSurface.copy(alpha = 0.55f), fontSize = 10.sp)
+        val minGap = 10.dp.toPx()
+        val targetLabelCount = 6
+        val candidateIndices = if (activeLogs.size <= targetLabelCount) {
+            activeLogs.indices.toList()
+        } else {
+            (0 until targetLabelCount).map { i ->
+                (i * (activeLogs.size - 1)) / (targetLabelCount - 1)
+            }.distinct()
+        }
+        // Greedily decide which candidates actually fit without overlapping — computed once
+        // here so the vertical reference lines (drawn early, behind the plot) and the text
+        // labels themselves (drawn later, on top) stay in perfect sync.
+        data class TimeLabel(val idx: Int, val x: Float, val labelX: Float, val text: String)
+        val visibleLabels = mutableListOf<TimeLabel>()
+        var lastDrawnRightEdge = -Float.MAX_VALUE
+        candidateIndices.forEachIndexed { candidatePos, idx ->
+            val log = activeLogs[idx]
+            val x = points[idx].x
+            val label = timeFormat.format(Date(log.timestamp))
+            val measured = textMeasurer.measure(label, xLabelStyle)
+            val labelX = (x - measured.size.width / 2f).coerceIn(0f, width - measured.size.width)
+            val isLast = candidatePos == candidateIndices.lastIndex
+            if (isLast || labelX >= lastDrawnRightEdge + minGap) {
+                visibleLabels.add(TimeLabel(idx, x, labelX, label))
+                lastDrawnRightEdge = labelX + measured.size.width
+            }
+        }
+
         // Draw horizontal grid lines with percentage labels (100/75/50/25/0)
         val textStyle = TextStyle(color = onSurface.copy(alpha = 0.55f), fontSize = 10.sp)
         for (i in 0..4) {
@@ -305,6 +335,17 @@ fun BatteryDrainChart(
                 text = pctLabel,
                 topLeft = Offset(8.dp.toPx(), (gridY - 12.dp.toPx()).coerceIn(0f, plotHeight - 14.dp.toPx())),
                 style = textStyle
+            )
+        }
+
+        // Faint vertical reference lines directly under each time label, so it's clear
+        // exactly which point on the curve each timestamp corresponds to.
+        visibleLabels.forEach { tl ->
+            drawLine(
+                color = onSurface.copy(alpha = 0.07f),
+                start = Offset(tl.x, 0f),
+                end = Offset(tl.x, plotHeight),
+                strokeWidth = 1.dp.toPx()
             )
         }
 
@@ -370,21 +411,13 @@ fun BatteryDrainChart(
             )
         }
 
-        // Draw X Axis time labels (first, middle, last real log timestamps) — in their
-        // own reserved strip below the plot, clear of the percentage labels above.
-        val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-        val xLabelStyle = TextStyle(color = onSurface.copy(alpha = 0.55f), fontSize = 10.sp)
-        val labelIndices = listOf(0, activeLogs.size / 2, activeLogs.size - 1).distinct()
-        labelIndices.forEach { idx ->
-            val log = activeLogs[idx]
-            val x = points[idx].x
-            val label = timeFormat.format(Date(log.timestamp))
-            val measured = textMeasurer.measure(label, xLabelStyle)
-            val labelX = (x - measured.size.width / 2f).coerceIn(0f, width - measured.size.width)
+        // Draw X Axis time labels — positions already computed above, in sync with the
+        // vertical reference lines.
+        visibleLabels.forEach { tl ->
             drawText(
                 textMeasurer = textMeasurer,
-                text = label,
-                topLeft = Offset(labelX, plotHeight + 2.dp.toPx()),
+                text = tl.text,
+                topLeft = Offset(tl.labelX, plotHeight + 2.dp.toPx()),
                 style = xLabelStyle
             )
         }
