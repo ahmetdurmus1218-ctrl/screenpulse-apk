@@ -4,6 +4,8 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -17,6 +19,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -190,7 +193,9 @@ fun ScreenOnOffRing(
 @Composable
 fun BatteryDrainChart(
     logs: List<BatteryLogEntity>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onRangeSelected: ((startTime: Long, endTime: Long) -> Unit)? = null,
+    onSelectionCleared: (() -> Unit)? = null
 ) {
     val chartColor = Color(0xFF00C853) // ElectricGreen — battery charts use green, distinct from the blue brand accent
     val onSurface = MaterialTheme.colorScheme.onSurface
@@ -210,8 +215,58 @@ fun BatteryDrainChart(
     }
 
     val activeLogs = logs
+    val minTime = activeLogs.first().timestamp
+    val maxTime = activeLogs.last().timestamp
 
-    Canvas(modifier = modifier) {
+    // Selection state, in fractional x (0f..1f) so it survives Canvas size changes.
+    var dragStartFrac by remember(logs) { mutableStateOf<Float?>(null) }
+    var dragEndFrac by remember(logs) { mutableStateOf<Float?>(null) }
+
+    Canvas(
+        modifier = modifier
+            .pointerInput(logs) {
+                detectDragGestures(
+                    onDragStart = { offset ->
+                        val frac = (offset.x / size.width).coerceIn(0f, 1f)
+                        dragStartFrac = frac
+                        dragEndFrac = frac
+                    },
+                    onDrag = { change, _ ->
+                        val frac = (change.position.x / size.width).coerceIn(0f, 1f)
+                        dragEndFrac = frac
+                    },
+                    onDragEnd = {
+                        val startFrac = dragStartFrac
+                        val endFrac = dragEndFrac
+                        if (startFrac != null && endFrac != null && minTime < maxTime) {
+                            val loFrac = minOf(startFrac, endFrac)
+                            val hiFrac = maxOf(startFrac, endFrac)
+                            // A drag shorter than ~1.5% of the width is treated as a tap —
+                            // clear the selection instead of creating a near-zero-width range.
+                            if (hiFrac - loFrac < 0.015f) {
+                                dragStartFrac = null
+                                dragEndFrac = null
+                                onSelectionCleared?.invoke()
+                            } else {
+                                val startT = minTime + (loFrac * (maxTime - minTime)).toLong()
+                                val endT = minTime + (hiFrac * (maxTime - minTime)).toLong()
+                                onRangeSelected?.invoke(startT, endT)
+                            }
+                        }
+                    }
+                )
+            }
+            .pointerInput(logs) {
+                detectTapGestures(
+                    onTap = {
+                        // A plain tap outside a drag clears any existing selection.
+                        dragStartFrac = null
+                        dragEndFrac = null
+                        onSelectionCleared?.invoke()
+                    }
+                )
+            }
+    ) {
         val width = size.width
         val height = size.height
         // Reserve a dedicated bottom strip exclusively for the time-axis labels, so the
@@ -220,8 +275,6 @@ fun BatteryDrainChart(
         val bottomAxisHeight = 16.dp.toPx()
         val plotHeight = height - bottomAxisHeight
 
-        val minTime = activeLogs.first().timestamp
-        val maxTime = activeLogs.last().timestamp
         val timeDelta = (maxTime - minTime).toFloat()
 
         val points = activeLogs.map { log ->
@@ -252,6 +305,29 @@ fun BatteryDrainChart(
                 text = pctLabel,
                 topLeft = Offset(8.dp.toPx(), (gridY - 12.dp.toPx()).coerceIn(0f, plotHeight - 14.dp.toPx())),
                 style = textStyle
+            )
+        }
+
+        // Highlight the currently selected time range, if any, behind the line itself.
+        if (dragStartFrac != null && dragEndFrac != null) {
+            val loFrac = minOf(dragStartFrac!!, dragEndFrac!!)
+            val hiFrac = maxOf(dragStartFrac!!, dragEndFrac!!)
+            drawRect(
+                color = Color(0xFF2B66FF).copy(alpha = 0.16f),
+                topLeft = Offset(loFrac * width, 0f),
+                size = Size((hiFrac - loFrac) * width, plotHeight)
+            )
+            drawLine(
+                color = Color(0xFF2B66FF).copy(alpha = 0.6f),
+                start = Offset(loFrac * width, 0f),
+                end = Offset(loFrac * width, plotHeight),
+                strokeWidth = 1.5.dp.toPx()
+            )
+            drawLine(
+                color = Color(0xFF2B66FF).copy(alpha = 0.6f),
+                start = Offset(hiFrac * width, 0f),
+                end = Offset(hiFrac * width, plotHeight),
+                strokeWidth = 1.5.dp.toPx()
             )
         }
 

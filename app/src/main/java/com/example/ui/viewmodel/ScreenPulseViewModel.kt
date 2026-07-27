@@ -13,6 +13,7 @@ import com.example.data.model.BatteryInfo
 import com.example.data.repository.UsageRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -57,6 +58,14 @@ class ScreenPulseViewModel(
         viewModelScope.launch {
             settingsManager.setLockScreenNotificationMode(mode)
             com.example.notification.LockScreenNotificationController.applyMode(context, mode)
+        }
+    }
+
+    /** Top apps used within an arbitrary time window — e.g. a range the person drag-selects
+     *  on the battery drain chart, to see what was running while the battery dropped. */
+    suspend fun getAppUsageForRange(startTime: Long, endTime: Long): List<com.example.data.model.AppUsageItem> {
+        return withContext(kotlinx.coroutines.Dispatchers.IO) {
+            repository.getAppUsageList(startTime, endTime)
         }
     }
 

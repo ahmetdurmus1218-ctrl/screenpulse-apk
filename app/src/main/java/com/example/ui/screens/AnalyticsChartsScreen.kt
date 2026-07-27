@@ -32,6 +32,7 @@ import com.example.ui.components.ScreenOnOffRing
 import com.example.ui.components.UsageBarChart
 import com.example.ui.viewmodel.MainUiState
 import com.example.ui.viewmodel.ScreenPulseViewModel
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -43,6 +44,11 @@ fun AnalyticsChartsScreen(
     val uiState by viewModel.uiState.collectAsState()
     var selectedTab by remember { mutableStateOf(0) } // 0 = Hourly, 1 = Daily, 2 = Weekly, 3 = Monthly
     val tabLabels = listOf("Saat", "Gün", "Hafta", "Ay")
+
+    var selectedRange by remember { mutableStateOf<Pair<Long, Long>?>(null) }
+    var selectedRangeApps by remember { mutableStateOf<List<com.example.data.model.AppUsageItem>>(emptyList()) }
+    var isLoadingRangeApps by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
 
     Box(
         modifier = modifier
@@ -201,8 +207,116 @@ fun AnalyticsChartsScreen(
                                         logs = state.batteryLogs,
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .height(180.dp)
+                                            .height(180.dp),
+                                        onRangeSelected = { start, end ->
+                                            selectedRange = start to end
+                                            isLoadingRangeApps = true
+                                            coroutineScope.launch {
+                                                selectedRangeApps = viewModel.getAppUsageForRange(start, end)
+                                                isLoadingRangeApps = false
+                                            }
+                                        },
+                                        onSelectionCleared = {
+                                            selectedRange = null
+                                            selectedRangeApps = emptyList()
+                                        }
                                     )
+
+                                    if (selectedRange == null) {
+                                        Text(
+                                            text = "İpucu: bir aralığı parmağınızla sürükleyip seçerek o saatlerde hangi uygulamaların kullanıldığını görebilirsiniz",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                            modifier = Modifier.padding(top = 10.dp)
+                                        )
+                                    } else {
+                                        val range = selectedRange!!
+                                        val rangeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+                                        Spacer(modifier = Modifier.height(14.dp))
+                                        HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+                                        Spacer(modifier = Modifier.height(14.dp))
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "${rangeFormat.format(Date(range.first))} – ${rangeFormat.format(Date(range.second))} arasında en çok kullanılanlar",
+                                                style = MaterialTheme.typography.labelMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                            Text(
+                                                text = "Temizle",
+                                                style = MaterialTheme.typography.labelMedium,
+                                                color = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.clickable {
+                                                    selectedRange = null
+                                                    selectedRangeApps = emptyList()
+                                                }
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.height(10.dp))
+
+                                        if (isLoadingRangeApps) {
+                                            Text(
+                                                text = "Yükleniyor…",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        } else if (selectedRangeApps.isEmpty()) {
+                                            Text(
+                                                text = "Bu aralıkta kayıtlı kullanım bulunamadı",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        } else {
+                                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                                selectedRangeApps.take(5).forEach { app ->
+                                                    Row(
+                                                        modifier = Modifier.fillMaxWidth(),
+                                                        verticalAlignment = Alignment.CenterVertically
+                                                    ) {
+                                                        if (app.icon != null) {
+                                                            Image(
+                                                                bitmap = app.icon.toBitmap().asImageBitmap(),
+                                                                contentDescription = null,
+                                                                modifier = Modifier
+                                                                    .size(28.dp)
+                                                                    .clip(RoundedCornerShape(8.dp))
+                                                            )
+                                                        } else {
+                                                            Box(
+                                                                modifier = Modifier
+                                                                    .size(28.dp)
+                                                                    .clip(RoundedCornerShape(8.dp))
+                                                                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                                                            )
+                                                        }
+                                                        Spacer(modifier = Modifier.width(10.dp))
+                                                        Text(
+                                                            text = app.appName,
+                                                            style = MaterialTheme.typography.bodySmall,
+                                                            color = MaterialTheme.colorScheme.onSurface,
+                                                            modifier = Modifier.weight(1f)
+                                                        )
+                                                        val mins = app.screenTimeSinceChargeMs / 60000
+                                                        val label = if (mins >= 60) {
+                                                            "${mins / 60}sa ${mins % 60}dk"
+                                                        } else {
+                                                            "${mins}dk"
+                                                        }
+                                                        Text(
+                                                            text = label,
+                                                            style = MaterialTheme.typography.bodySmall,
+                                                            fontWeight = FontWeight.Bold,
+                                                            color = MaterialTheme.colorScheme.primary
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
