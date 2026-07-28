@@ -245,8 +245,8 @@ fun AnalyticsChartsScreen(
                                             return when {
                                                 before != null && after != null && before.timestamp != after.timestamp -> {
                                                     val frac = (t - before.timestamp).toFloat() / (after.timestamp - before.timestamp)
-                                                    before.batteryLevel + ((after.batteryLevel - before.batteryLevel) * frac)
-                                                }.toInt()
+                                                    (before.batteryLevel + ((after.batteryLevel - before.batteryLevel) * frac)).toInt()
+                                                }
                                                 before != null -> before.batteryLevel
                                                 after != null -> after.batteryLevel
                                                 else -> null
