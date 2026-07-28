@@ -160,6 +160,7 @@ open class ScreenPulseWidgetProvider(
         val colorSecondary = if (isDark) Color.parseColor("#99AAB8E8") else Color.parseColor("#995A6478")
         val colorDim = if (isDark) Color.parseColor("#66FFFFFF") else Color.parseColor("#66000000")
         val colorAccent = Color.parseColor("#7A97FF") // brand blue reads fine on both backgrounds
+        val colorDivider = if (isDark) Color.parseColor("#14FFFFFF") else Color.parseColor("#14000000")
 
         val sotStr = formatWidgetTime(screenOnMs)
         val soffStr = formatWidgetTime(screenOffMs)
@@ -185,6 +186,7 @@ open class ScreenPulseWidgetProvider(
                 views.setImageViewBitmap(R.id.widget_battery_icon, batteryIconBitmap)
                 views.setTextViewText(R.id.widget_sot_value, sinceChargeStr)
                 views.setTextColor(R.id.widget_sot_value, colorAccent)
+                views.setTextColor(R.id.widget_label_since_charge, colorDim)
                 getVectorBitmap(context, R.drawable.ic_widget_bolt, 12, 12)?.let {
                     views.setImageViewBitmap(R.id.widget_bolt_icon, it)
                 }
@@ -198,6 +200,9 @@ open class ScreenPulseWidgetProvider(
                 views.setTextColor(R.id.widget_battery, colorPrimary)
                 views.setTextViewText(R.id.widget_cycle_value, cycleDotStr)
                 views.setTextColor(R.id.widget_cycle_value, colorSecondary)
+                views.setTextColor(R.id.widget_label_since_charge_title, colorSecondary)
+                views.setTextColor(R.id.widget_label_pil, colorDim)
+                views.setInt(R.id.widget_divider, "setBackgroundColor", colorDivider)
                 views.setImageViewBitmap(R.id.widget_battery_icon, batteryIconBitmap)
                 getVectorBitmap(context, R.drawable.ic_widget_sun, 14, 14)?.let {
                     views.setImageViewBitmap(R.id.widget_sun_icon, it)
@@ -210,6 +215,13 @@ open class ScreenPulseWidgetProvider(
                 views.setTextColor(R.id.widget_screen_off_value, colorPrimary)
                 views.setTextViewText(R.id.widget_last_charge_time, lastChargeStr)
                 views.setTextColor(R.id.widget_last_charge_time, colorDim)
+                views.setTextColor(R.id.widget_label_brand, colorSecondary)
+                views.setTextColor(R.id.widget_label_standby, colorDim)
+                views.setTextColor(R.id.widget_label_temp, colorDim)
+                views.setTextColor(R.id.widget_label_voltage, colorDim)
+                views.setTextColor(R.id.widget_label_cycle_title, colorDim)
+                views.setInt(R.id.widget_divider_1, "setBackgroundColor", colorDivider)
+                views.setInt(R.id.widget_divider_2, "setBackgroundColor", colorDivider)
                 getVectorBitmap(context, R.drawable.ic_widget_pulse, 14, 14)?.let {
                     views.setImageViewBitmap(R.id.widget_pulse_icon, it)
                 }
@@ -235,6 +247,9 @@ open class ScreenPulseWidgetProvider(
                 views.setTextColor(R.id.widget_cycle_value, colorSecondary)
                 views.setTextViewText(R.id.widget_sot_value, sinceChargeStr)
                 views.setTextColor(R.id.widget_sot_value, colorAccent)
+                views.setTextColor(R.id.widget_label_pil_seviyesi, colorDim)
+                views.setTextColor(R.id.widget_label_since_charge, colorDim)
+                views.setInt(R.id.widget_divider, "setBackgroundColor", colorDivider)
                 views.setImageViewBitmap(R.id.widget_battery_icon, batteryIconBitmap)
                 getVectorBitmap(context, R.drawable.ic_widget_sun, 16, 16)?.let {
                     views.setImageViewBitmap(R.id.widget_sun_icon, it)

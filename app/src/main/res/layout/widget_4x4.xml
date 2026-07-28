@@ -26,6 +26,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="6dp"
+                android:id="@+id/widget_label_brand"
                 android:text="SCREENPULSE"
                 android:textColor="#99AAB8E8"
                 android:textSize="11sp"
@@ -43,6 +44,7 @@
     </RelativeLayout>
 
     <FrameLayout
+        android:id="@+id/widget_divider_1"
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="#14FFFFFF"
@@ -95,6 +97,7 @@
     </LinearLayout>
 
     <FrameLayout
+        android:id="@+id/widget_divider_2"
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="#14FFFFFF"
@@ -127,6 +130,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:id="@+id/widget_label_standby"
                     android:text="Bekleme"
                     android:textColor="#66FFFFFF"
                     android:textSize="11sp" />
@@ -164,6 +168,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:id="@+id/widget_label_temp"
                     android:text="Sıcaklık"
                     android:textColor="#66FFFFFF"
                     android:textSize="11sp" />
@@ -201,6 +206,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:id="@+id/widget_label_voltage"
                     android:text="Voltaj"
                     android:textColor="#66FFFFFF"
                     android:textSize="10sp" />
@@ -238,6 +244,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:id="@+id/widget_label_cycle_title"
                     android:text="Döngü"
                     android:textColor="#66FFFFFF"
                     android:textSize="10sp" />

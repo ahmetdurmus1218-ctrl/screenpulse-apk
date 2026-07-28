@@ -44,6 +44,7 @@
 
     <!-- Right: divider + stacked stats -->
     <FrameLayout
+        android:id="@+id/widget_divider"
         android:layout_width="1dp"
         android:layout_height="match_parent"
         android:layout_marginLeft="4dp"
@@ -85,6 +86,7 @@
         </LinearLayout>
 
         <TextView
+            android:id="@+id/widget_label_pil_seviyesi"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Pil Seviyesi"
@@ -102,6 +104,7 @@
             android:textStyle="bold" />
 
         <TextView
+            android:id="@+id/widget_label_since_charge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Şarjdan Beri"
