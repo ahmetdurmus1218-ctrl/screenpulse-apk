@@ -196,11 +196,15 @@ class ScreenPulseViewModel(
                 repository.saveUsageHistory(todayHistory)
 
                 // Real hourly buckets for today (00-04, 04-08, ... 20-24) — actual
-                // per-window UsageStatsManager queries, not a fixed made-up split.
+                // per-window event-based queries (same accurate source as the main screen-on
+                // figure). BUG FIX: this used to call getScreenOnTimeForRange(), which sums
+                // per-app totalTimeInForeground via queryAndAggregateUsageStats — a method
+                // that's unreliable for narrow sub-day windows and was returning nearly the
+                // same (whole-day-ish) total for every single 4-hour block.
                 val hourlyBuckets = (0 until 6).map { blockIndex ->
                     val blockStart = todayStart + blockIndex * 4 * 3600 * 1000L
                     val blockEnd = (blockStart + 4 * 3600 * 1000L).coerceAtMost(now)
-                    repository.getScreenOnTimeForRange(blockStart, blockEnd)
+                    repository.getScreenOnOffFromEvents(blockStart, blockEnd).first
                 }
 
                 val unlockCount = repository.getUnlockCount(lastUnpluggedTime, now)

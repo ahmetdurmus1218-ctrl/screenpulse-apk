@@ -333,7 +333,14 @@ fun BatteryDrainChart(
             val measured = textMeasurer.measure(label, xLabelStyle)
             val labelX = (x - measured.size.width / 2f).coerceIn(0f, width - measured.size.width)
             val isLast = candidatePos == candidateIndices.lastIndex
-            if (isLast || labelX >= lastDrawnRightEdge + minGap) {
+            if (labelX >= lastDrawnRightEdge + minGap) {
+                visibleLabels.add(TimeLabel(idx, x, labelX, label))
+                lastDrawnRightEdge = labelX + measured.size.width
+            } else if (isLast) {
+                // The final (current time) label always wins if it would otherwise collide —
+                // but instead of drawing on top of the previous one, remove that previous
+                // label so there's never an overlap.
+                if (visibleLabels.isNotEmpty()) visibleLabels.removeAt(visibleLabels.lastIndex)
                 visibleLabels.add(TimeLabel(idx, x, labelX, label))
                 lastDrawnRightEdge = labelX + measured.size.width
             }
