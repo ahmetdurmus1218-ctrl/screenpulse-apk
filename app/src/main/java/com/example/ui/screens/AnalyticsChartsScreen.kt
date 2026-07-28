@@ -233,13 +233,27 @@ fun AnalyticsChartsScreen(
                                         val range = selectedRange!!
                                         val rangeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
 
-                                        // Real measured battery % drop within this exact window, from the
-                                        // battery log points nearest the start/end — not a generic estimate.
+                                        // Real measured battery % drop within this exact window — linearly
+                                        // interpolated between the surrounding log points (not snapped to
+                                        // "nearest point before", which could return 0% for narrow windows
+                                        // that fall entirely between two sparse data points).
                                         val logsInOrder = state.batteryLogs.sortedBy { it.timestamp }
-                                        val batteryAtStart = logsInOrder.lastOrNull { it.timestamp <= range.first }?.batteryLevel
-                                            ?: logsInOrder.firstOrNull()?.batteryLevel
-                                        val batteryAtEnd = logsInOrder.lastOrNull { it.timestamp <= range.second }?.batteryLevel
-                                            ?: batteryAtStart
+                                        fun batteryAt(t: Long): Int? {
+                                            if (logsInOrder.isEmpty()) return null
+                                            val before = logsInOrder.lastOrNull { it.timestamp <= t }
+                                            val after = logsInOrder.firstOrNull { it.timestamp >= t }
+                                            return when {
+                                                before != null && after != null && before.timestamp != after.timestamp -> {
+                                                    val frac = (t - before.timestamp).toFloat() / (after.timestamp - before.timestamp)
+                                                    before.batteryLevel + ((after.batteryLevel - before.batteryLevel) * frac)
+                                                }.toInt()
+                                                before != null -> before.batteryLevel
+                                                after != null -> after.batteryLevel
+                                                else -> null
+                                            }
+                                        }
+                                        val batteryAtStart = batteryAt(range.first)
+                                        val batteryAtEnd = batteryAt(range.second)
                                         val realDropPct = if (batteryAtStart != null && batteryAtEnd != null) {
                                             (batteryAtStart - batteryAtEnd).coerceAtLeast(0)
                                         } else null

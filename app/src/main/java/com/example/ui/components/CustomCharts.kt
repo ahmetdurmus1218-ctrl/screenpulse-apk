@@ -221,6 +221,7 @@ fun BatteryDrainChart(
     // Selection state, in fractional x (0f..1f) so it survives Canvas size changes.
     var dragStartFrac by remember(logs) { mutableStateOf<Float?>(null) }
     var dragEndFrac by remember(logs) { mutableStateOf<Float?>(null) }
+    var draggingHandle by remember(logs) { mutableStateOf(0) } // 0 = none, 1 = start edge, 2 = end edge
 
     Canvas(
         modifier = modifier
@@ -228,12 +229,27 @@ fun BatteryDrainChart(
                 detectDragGestures(
                     onDragStart = { offset ->
                         val frac = (offset.x / size.width).coerceIn(0f, 1f)
-                        dragStartFrac = frac
-                        dragEndFrac = frac
+                        val handlePx = 24.dp.toPx()
+                        val s = dragStartFrac
+                        val e = dragEndFrac
+                        draggingHandle = when {
+                            s != null && kotlin.math.abs(offset.x - s * size.width) < handlePx -> 1
+                            e != null && kotlin.math.abs(offset.x - e * size.width) < handlePx -> 2
+                            else -> {
+                                // No existing handle nearby — start a brand new selection.
+                                dragStartFrac = frac
+                                dragEndFrac = frac
+                                0
+                            }
+                        }
                     },
                     onDrag = { change, _ ->
                         val frac = (change.position.x / size.width).coerceIn(0f, 1f)
-                        dragEndFrac = frac
+                        when (draggingHandle) {
+                            1 -> dragStartFrac = frac
+                            2 -> dragEndFrac = frac
+                            else -> dragEndFrac = frac
+                        }
                     },
                     onDragEnd = {
                         val startFrac = dragStartFrac
@@ -241,8 +257,6 @@ fun BatteryDrainChart(
                         if (startFrac != null && endFrac != null && minTime < maxTime) {
                             val loFrac = minOf(startFrac, endFrac)
                             val hiFrac = maxOf(startFrac, endFrac)
-                            // A drag shorter than ~1.5% of the width is treated as a tap —
-                            // clear the selection instead of creating a near-zero-width range.
                             if (hiFrac - loFrac < 0.015f) {
                                 dragStartFrac = null
                                 dragEndFrac = null
@@ -258,11 +272,19 @@ fun BatteryDrainChart(
             }
             .pointerInput(logs) {
                 detectTapGestures(
-                    onTap = {
-                        // A plain tap outside a drag clears any existing selection.
-                        dragStartFrac = null
-                        dragEndFrac = null
-                        onSelectionCleared?.invoke()
+                    onTap = { offset ->
+                        // Ignore taps that land on an existing handle — those are for
+                        // fine-tuning via drag, not clearing.
+                        val handlePx = 24.dp.toPx()
+                        val s = dragStartFrac
+                        val e = dragEndFrac
+                        val nearHandle = (s != null && kotlin.math.abs(offset.x - s * size.width) < handlePx) ||
+                            (e != null && kotlin.math.abs(offset.x - e * size.width) < handlePx)
+                        if (!nearHandle) {
+                            dragStartFrac = null
+                            dragEndFrac = null
+                            onSelectionCleared?.invoke()
+                        }
                     }
                 )
             }
@@ -370,6 +392,13 @@ fun BatteryDrainChart(
                 end = Offset(hiFrac * width, plotHeight),
                 strokeWidth = 1.5.dp.toPx()
             )
+            // Grab handles — small filled circles at each edge, sized generously enough
+            // to be an easy touch target for fine-tuning the selection afterwards.
+            val handleRadius = 6.dp.toPx()
+            drawCircle(color = Color(0xFF2B66FF), radius = handleRadius, center = Offset(loFrac * width, plotHeight / 2f))
+            drawCircle(color = Color.White, radius = handleRadius * 0.4f, center = Offset(loFrac * width, plotHeight / 2f))
+            drawCircle(color = Color(0xFF2B66FF), radius = handleRadius, center = Offset(hiFrac * width, plotHeight / 2f))
+            drawCircle(color = Color.White, radius = handleRadius * 0.4f, center = Offset(hiFrac * width, plotHeight / 2f))
         }
 
         // Draw line pathway
