@@ -442,7 +442,7 @@ private fun MostUsedAppRow(
 ) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Box(
-            modifier = Modifier.size(38.dp).clip(RoundedCornerShape(11.dp)).background(MaterialTheme.colorScheme.surfaceVariant),
+            modifier = Modifier.size(38.dp).clip(RoundedCornerShape(13.dp)).background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center
         ) {
             if (icon != null) {
@@ -709,7 +709,7 @@ fun GridBatteryMetrics(info: BatteryInfo) {
 
 @Composable
 fun BatteryMetricItem(label: String, value: String, icon: ImageVector, modifier: Modifier = Modifier) {
-    Row(modifier = modifier.padding(4.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(modifier = modifier.padding(4.dp), verticalAlignment = Alignment.Top) {
         Box(
             modifier = Modifier.size(44.dp).clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center

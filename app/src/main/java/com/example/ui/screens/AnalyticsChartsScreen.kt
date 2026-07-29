@@ -318,13 +318,13 @@ fun AnalyticsChartsScreen(
                                                                 contentDescription = null,
                                                                 modifier = Modifier
                                                                     .size(28.dp)
-                                                                    .clip(RoundedCornerShape(8.dp))
+                                                                    .clip(RoundedCornerShape(10.dp))
                                                             )
                                                         } else {
                                                             Box(
                                                                 modifier = Modifier
                                                                     .size(28.dp)
-                                                                    .clip(RoundedCornerShape(8.dp))
+                                                                    .clip(RoundedCornerShape(10.dp))
                                                                     .background(MaterialTheme.colorScheme.surfaceVariant)
                                                             )
                                                         }
@@ -490,7 +490,7 @@ fun AppProgressRow(app: com.example.data.model.AppUsageItem) {
         Box(
             modifier = Modifier
                 .size(36.dp)
-                .clip(RoundedCornerShape(8.dp))
+                .clip(RoundedCornerShape(11.dp))
                 .background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center
         ) {

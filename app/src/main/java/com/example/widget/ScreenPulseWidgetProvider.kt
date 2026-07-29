@@ -173,9 +173,9 @@ open class ScreenPulseWidgetProvider(
 
         val batteryIconBitmap = drawMiniBatteryIcon(batteryInfo.percentage, batteryInfo.isCharging, isDark)
 
-        val cycleCountVal = if (batteryInfo.hardwareCycleCount > 0) batteryInfo.hardwareCycleCount else batteryInfo.cycleCount.coerceAtLeast(0)
-        val cycleStr = "${cycleCountVal} dng"
-        val cycleDotStr = "• ${cycleCountVal} dng"
+        val plugCountVal = batteryInfo.plugInCount
+        val cycleStr = "${plugCountVal}x fişe"
+        val cycleDotStr = "• ${plugCountVal}x fişe"
 
         when (targetLayoutResId) {
             R.layout.widget_1x4 -> {
@@ -220,6 +220,7 @@ open class ScreenPulseWidgetProvider(
                 views.setTextColor(R.id.widget_label_temp, colorDim)
                 views.setTextColor(R.id.widget_label_voltage, colorDim)
                 views.setTextColor(R.id.widget_label_cycle_title, colorDim)
+                views.setTextViewText(R.id.widget_label_cycle_title, "Fişe")
                 views.setInt(R.id.widget_divider_1, "setBackgroundColor", colorDivider)
                 views.setInt(R.id.widget_divider_2, "setBackgroundColor", colorDivider)
                 getVectorBitmap(context, R.drawable.ic_widget_pulse, 14, 14)?.let {
@@ -235,7 +236,7 @@ open class ScreenPulseWidgetProvider(
                     String.format(Locale.getDefault(), "%.1fV", batteryInfo.voltage)
                 )
                 views.setTextColor(R.id.widget_voltage_value, colorPrimary)
-                views.setTextViewText(R.id.widget_cycle_value, cycleStr)
+                views.setTextViewText(R.id.widget_cycle_value, "$plugCountVal")
                 views.setTextColor(R.id.widget_cycle_value, colorPrimary)
                 val bitmap = drawCircularBattery(context, batteryInfo.percentage, batteryInfo.isCharging, isDark = isDark)
                 views.setImageViewBitmap(R.id.widget_battery_circle, bitmap)
@@ -256,6 +257,33 @@ open class ScreenPulseWidgetProvider(
                 }
                 val ring = drawScreenTimeRing(context, sotStr, screenOnMs, screenOffMs, compact = false, isDark = isDark)
                 views.setImageViewBitmap(R.id.widget_sot_ring, ring)
+            }
+            R.layout.widget_4x1 -> {
+                views.setTextViewText(R.id.widget_battery, "%${batteryInfo.percentage}")
+                views.setTextColor(R.id.widget_battery, colorPrimary)
+                views.setImageViewBitmap(R.id.widget_battery_icon, batteryIconBitmap)
+                views.setTextViewText(R.id.widget_sot_value, sotStr)
+                views.setTextColor(R.id.widget_sot_value, colorAccent)
+                views.setTextViewText(R.id.widget_plug_count_value, "${batteryInfo.plugInCount}")
+                views.setTextColor(R.id.widget_plug_count_value, colorPrimary)
+                views.setTextColor(R.id.widget_label_plug_count, colorDim)
+                views.setInt(R.id.widget_divider, "setBackgroundColor", colorDivider)
+                getVectorBitmap(context, R.drawable.ic_widget_sun, 14, 14)?.let {
+                    views.setImageViewBitmap(R.id.widget_sun_icon, it)
+                }
+                getVectorBitmap(context, R.drawable.ic_widget_bolt, 14, 14)?.let {
+                    views.setImageViewBitmap(R.id.widget_bolt_icon, it)
+                }
+            }
+            R.layout.widget_2x1 -> {
+                views.setTextViewText(R.id.widget_battery, "%${batteryInfo.percentage}")
+                views.setTextColor(R.id.widget_battery, colorPrimary)
+                views.setImageViewBitmap(R.id.widget_battery_icon, batteryIconBitmap)
+                views.setTextViewText(R.id.widget_plug_count_value, "${batteryInfo.plugInCount}")
+                views.setTextColor(R.id.widget_plug_count_value, colorPrimary)
+                getVectorBitmap(context, R.drawable.ic_widget_bolt, 12, 12)?.let {
+                    views.setImageViewBitmap(R.id.widget_bolt_icon, it)
+                }
             }
             else -> { // widget_2x2
                 views.setTextViewText(R.id.widget_battery, "%${batteryInfo.percentage}")
@@ -488,7 +516,9 @@ open class ScreenPulseWidgetProvider(
                     ScreenPulseWidgetProvider4x2::class.java,
                     ScreenPulseWidgetProvider4x4::class.java,
                     ScreenPulseWidgetProvider2x4::class.java,
-                    ScreenPulseWidgetProvider1x4::class.java
+                    ScreenPulseWidgetProvider1x4::class.java,
+                    ScreenPulseWidgetProvider4x1::class.java,
+                    ScreenPulseWidgetProvider2x1::class.java
                 )
                 for (providerClass in providers) {
                     val component = android.content.ComponentName(context, providerClass)
@@ -525,3 +555,5 @@ class ScreenPulseWidgetProvider4x2 : ScreenPulseWidgetProvider(R.layout.widget_4
 class ScreenPulseWidgetProvider4x4 : ScreenPulseWidgetProvider(R.layout.widget_4x4)
 class ScreenPulseWidgetProvider2x4 : ScreenPulseWidgetProvider(R.layout.widget_2x4)
 class ScreenPulseWidgetProvider1x4 : ScreenPulseWidgetProvider(R.layout.widget_1x4)
+class ScreenPulseWidgetProvider4x1 : ScreenPulseWidgetProvider(R.layout.widget_4x1)
+class ScreenPulseWidgetProvider2x1 : ScreenPulseWidgetProvider(R.layout.widget_2x1)
