@@ -60,6 +60,14 @@ class BatteryStateWorker(
             }
 
             settingsManager.setWasCharging(isChargingNow)
+
+            // Refresh widgets here too — this worker already runs every ~15 min
+            // regardless of the lock-screen notification feature's on/off state, so
+            // this gives widgets a real background refresh even when that feature is
+            // off, instead of relying solely on Android's own ~30 min (often longer
+            // in practice) passive updatePeriodMillis schedule.
+            com.example.widget.ScreenPulseWidgetProvider.updateAllWidgets(applicationContext)
+
             Result.success()
         } catch (e: Exception) {
             Result.retry()
