@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
 import android.graphics.*
+import android.os.SystemClock
 import android.widget.RemoteViews
 import androidx.annotation.LayoutRes
 import com.example.MainActivity
@@ -184,7 +185,8 @@ open class ScreenPulseWidgetProvider(
                 views.setTextViewText(R.id.widget_cycle_value, cycleStr)
                 views.setTextColor(R.id.widget_cycle_value, colorSecondary)
                 views.setImageViewBitmap(R.id.widget_battery_icon, batteryIconBitmap)
-                views.setTextViewText(R.id.widget_sot_value, sinceChargeStr)
+                val chronoBase1x4 = SystemClock.elapsedRealtime() - timeSinceChargeMs
+                views.setChronometer(R.id.widget_sot_value, chronoBase1x4, null, true)
                 views.setTextColor(R.id.widget_sot_value, colorAccent)
                 views.setTextColor(R.id.widget_label_since_charge, colorDim)
                 getVectorBitmap(context, R.drawable.ic_widget_bolt, 12, 12)?.let {
@@ -245,7 +247,8 @@ open class ScreenPulseWidgetProvider(
                 views.setTextColor(R.id.widget_battery, colorPrimary)
                 views.setTextViewText(R.id.widget_cycle_value, cycleStr)
                 views.setTextColor(R.id.widget_cycle_value, colorSecondary)
-                views.setTextViewText(R.id.widget_sot_value, sinceChargeStr)
+                val chronoBase4x2 = SystemClock.elapsedRealtime() - timeSinceChargeMs
+                views.setChronometer(R.id.widget_sot_value, chronoBase4x2, null, true)
                 views.setTextColor(R.id.widget_sot_value, colorAccent)
                 views.setTextColor(R.id.widget_label_pil_seviyesi, colorDim)
                 views.setTextColor(R.id.widget_label_since_charge, colorDim)
