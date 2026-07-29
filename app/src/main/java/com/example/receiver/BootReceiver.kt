@@ -17,9 +17,10 @@ class BootReceiver : BroadcastReceiver() {
         ) {
             return
         }
+        val app = context.applicationContext as ScreenPulseApplication
+        com.example.widget.ScreenPulseWidgetProvider.updateAllWidgets(context)
         // Only restart if the person had actually chosen "Sürekli Açık" or "Periyodik" —
         // a reboot shouldn't turn the feature on for someone who left it "Kapalı".
-        val app = context.applicationContext as ScreenPulseApplication
         CoroutineScope(Dispatchers.IO).launch {
             val mode = app.settingsManager.lockScreenNotificationMode.first()
             if (mode != "off") {

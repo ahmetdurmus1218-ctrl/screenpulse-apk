@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.first
 import java.util.*
 
 class UsageRepository(
-    private val context: Context,
+    val context: Context,
     private val usageDao: UsageDao,
     private val settingsManager: SettingsManager
 ) {

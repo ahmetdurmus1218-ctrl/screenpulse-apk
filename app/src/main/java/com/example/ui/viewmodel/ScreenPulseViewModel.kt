@@ -221,6 +221,10 @@ class ScreenPulseViewModel(
                     unlockCount = unlockCount,
                     hasPermission = true
                 )
+                // Keep home-screen widgets in sync with the app itself, independent of
+                // whether the optional lock-screen notification ("Sürekli Açık") is running —
+                // widgets shouldn't only feel live when that separate feature happens to be on.
+                com.example.widget.ScreenPulseWidgetProvider.updateAllWidgets(repository.context)
             } catch (e: Exception) {
                 // Keep showing loading or previous if error
             }
