@@ -94,7 +94,7 @@
             android:textSize="10sp"
             android:layout_marginBottom="14dp" />
 
-        <Chronometer
+        <TextView
             android:id="@+id/widget_sot_value"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
