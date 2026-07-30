@@ -20,6 +20,7 @@ class SettingsManager(private val context: Context) {
         private val KEY_CHARGE_SESSION_START_LEVEL = intPreferencesKey("charge_session_start_level")
         private val KEY_CUMULATIVE_CHARGE_PERCENT = floatPreferencesKey("cumulative_charge_percent")
         private val KEY_PLUG_IN_COUNT = intPreferencesKey("plug_in_count")
+        private val KEY_WIDGET_METRIC_ROTATION = intPreferencesKey("widget_metric_rotation")
         private val KEY_LOCK_SCREEN_NOTIFICATION_MODE = stringPreferencesKey("lock_screen_notification_mode")
     }
 
@@ -57,6 +58,24 @@ class SettingsManager(private val context: Context) {
      */
     val plugInCount: Flow<Int> = context.dataStore.data.map { preferences ->
         preferences[KEY_PLUG_IN_COUNT] ?: 0
+    }
+
+    /** Which of the widget's rotating metrics (Fiş D. / Dnnm D. / Sğlk D.) to show next.
+     *  Advances by one every time widgets are refreshed so the displayed metric cycles
+     *  automatically without any user action. */
+    val widgetMetricRotation: Flow<Int> = context.dataStore.data.map { preferences ->
+        preferences[KEY_WIDGET_METRIC_ROTATION] ?: 0
+    }
+
+    /** Advances the rotation and returns the value that should be used for THIS refresh
+     *  (i.e. the value before advancing) so the caller doesn't need a second read. */
+    suspend fun advanceAndGetWidgetMetricRotation(): Int {
+        var current = 0
+        context.dataStore.edit { preferences ->
+            current = preferences[KEY_WIDGET_METRIC_ROTATION] ?: 0
+            preferences[KEY_WIDGET_METRIC_ROTATION] = current + 1
+        }
+        return current
     }
 
     suspend fun onChargingSessionStart(batteryLevel: Int) {

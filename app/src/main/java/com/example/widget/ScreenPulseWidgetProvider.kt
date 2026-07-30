@@ -106,6 +106,22 @@ open class ScreenPulseWidgetProvider(
                     true
                 }
 
+                // Rotating widget metric: cycles through Fiş D. / Dnnm D. (if supported) /
+                // Sğlk D. on every refresh, entirely automatically — no user toggle needed.
+                val availableMetrics = buildList {
+                    add("Fiş D." to "${batteryInfo.plugInCount}")
+                    if (batteryInfo.hardwareCycleCount >= 0) {
+                        add("Dnnm D." to "${batteryInfo.hardwareCycleCount}")
+                    }
+                    add("Sğlk D." to "~${batteryInfo.cycleCount}")
+                }
+                val rotationIndex = try {
+                    settingsManager.advanceAndGetWidgetMetricRotation()
+                } catch (t: Throwable) {
+                    0
+                }
+                val (activeMetricLabel, activeMetricValue) = availableMetrics[rotationIndex % availableMetrics.size]
+
                 appWidgetIds.forEach { widgetId ->
                     val views = populateWidgetViews(
                         context = context,
@@ -114,7 +130,9 @@ open class ScreenPulseWidgetProvider(
                         screenOnMs = cleanScreenOn,
                         screenOffMs = cleanScreenOff,
                         timeSinceChargeMs = cleanTimeSinceCharge,
-                        isDark = isDark
+                        isDark = isDark,
+                        metricLabel = activeMetricLabel,
+                        metricValue = activeMetricValue
                     )
 
                     val intent = Intent(context, MainActivity::class.java)
@@ -145,7 +163,9 @@ open class ScreenPulseWidgetProvider(
         screenOnMs: Long,
         screenOffMs: Long,
         timeSinceChargeMs: Long,
-        isDark: Boolean
+        isDark: Boolean,
+        metricLabel: String,
+        metricValue: String
     ): RemoteViews {
         val views = RemoteViews(context.packageName, targetLayoutResId)
         views.setInt(
@@ -173,9 +193,8 @@ open class ScreenPulseWidgetProvider(
 
         val batteryIconBitmap = drawMiniBatteryIcon(batteryInfo.percentage, batteryInfo.isCharging, isDark)
 
-        val plugCountVal = batteryInfo.plugInCount
-        val cycleStr = "Fiş D. ${plugCountVal}"
-        val cycleDotStr = "• Fiş D. ${plugCountVal}"
+        val cycleStr = "$metricLabel $metricValue"
+        val cycleDotStr = "• $metricLabel $metricValue"
 
         when (targetLayoutResId) {
             R.layout.widget_1x4 -> {
@@ -220,7 +239,7 @@ open class ScreenPulseWidgetProvider(
                 views.setTextColor(R.id.widget_label_temp, colorDim)
                 views.setTextColor(R.id.widget_label_voltage, colorDim)
                 views.setTextColor(R.id.widget_label_cycle_title, colorDim)
-                views.setTextViewText(R.id.widget_label_cycle_title, "Fiş D.")
+                views.setTextViewText(R.id.widget_label_cycle_title, metricLabel)
                 views.setInt(R.id.widget_divider_1, "setBackgroundColor", colorDivider)
                 views.setInt(R.id.widget_divider_2, "setBackgroundColor", colorDivider)
                 getVectorBitmap(context, R.drawable.ic_widget_pulse, 14, 14)?.let {
@@ -236,7 +255,7 @@ open class ScreenPulseWidgetProvider(
                     String.format(Locale.getDefault(), "%.1fV", batteryInfo.voltage)
                 )
                 views.setTextColor(R.id.widget_voltage_value, colorPrimary)
-                views.setTextViewText(R.id.widget_cycle_value, "$plugCountVal")
+                views.setTextViewText(R.id.widget_cycle_value, metricValue)
                 views.setTextColor(R.id.widget_cycle_value, colorPrimary)
                 val bitmap = drawCircularBattery(context, batteryInfo.percentage, batteryInfo.isCharging, isDark = isDark)
                 views.setImageViewBitmap(R.id.widget_battery_circle, bitmap)
@@ -264,9 +283,10 @@ open class ScreenPulseWidgetProvider(
                 views.setImageViewBitmap(R.id.widget_battery_icon, batteryIconBitmap)
                 views.setTextViewText(R.id.widget_sot_value, sotStr)
                 views.setTextColor(R.id.widget_sot_value, colorAccent)
-                views.setTextViewText(R.id.widget_plug_count_value, "${batteryInfo.plugInCount}")
+                views.setTextViewText(R.id.widget_plug_count_value, metricValue)
                 views.setTextColor(R.id.widget_plug_count_value, colorPrimary)
                 views.setTextColor(R.id.widget_label_plug_count, colorDim)
+                views.setTextViewText(R.id.widget_label_plug_count, metricLabel)
                 views.setInt(R.id.widget_divider, "setBackgroundColor", colorDivider)
                 getVectorBitmap(context, R.drawable.ic_widget_sun, 14, 14)?.let {
                     views.setImageViewBitmap(R.id.widget_sun_icon, it)
@@ -279,7 +299,7 @@ open class ScreenPulseWidgetProvider(
                 views.setTextViewText(R.id.widget_battery, "%${batteryInfo.percentage}")
                 views.setTextColor(R.id.widget_battery, colorPrimary)
                 views.setImageViewBitmap(R.id.widget_battery_icon, batteryIconBitmap)
-                views.setTextViewText(R.id.widget_plug_count_value, "${batteryInfo.plugInCount}")
+                views.setTextViewText(R.id.widget_plug_count_value, metricValue)
                 views.setTextColor(R.id.widget_plug_count_value, colorPrimary)
                 getVectorBitmap(context, R.drawable.ic_widget_bolt, 12, 12)?.let {
                     views.setImageViewBitmap(R.id.widget_bolt_icon, it)
