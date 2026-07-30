@@ -58,7 +58,7 @@ class LockScreenNotificationService : Service() {
      *  "Sürekli Açık", which already accepts the associated battery trade-off. */
     private fun startTicker() {
         scope.launch {
-            while (kotlinx.coroutines.isActive) {
+            while (job.isActive) {
                 kotlinx.coroutines.delay(45_000L)
                 refresh()
             }
