@@ -174,8 +174,8 @@ open class ScreenPulseWidgetProvider(
         val batteryIconBitmap = drawMiniBatteryIcon(batteryInfo.percentage, batteryInfo.isCharging, isDark)
 
         val plugCountVal = batteryInfo.plugInCount
-        val cycleStr = "${plugCountVal}x fişe"
-        val cycleDotStr = "• ${plugCountVal}x fişe"
+        val cycleStr = "Fiş D. ${plugCountVal}"
+        val cycleDotStr = "• Fiş D. ${plugCountVal}"
 
         when (targetLayoutResId) {
             R.layout.widget_1x4 -> {
@@ -220,7 +220,7 @@ open class ScreenPulseWidgetProvider(
                 views.setTextColor(R.id.widget_label_temp, colorDim)
                 views.setTextColor(R.id.widget_label_voltage, colorDim)
                 views.setTextColor(R.id.widget_label_cycle_title, colorDim)
-                views.setTextViewText(R.id.widget_label_cycle_title, "Fişe")
+                views.setTextViewText(R.id.widget_label_cycle_title, "Fiş D.")
                 views.setInt(R.id.widget_divider_1, "setBackgroundColor", colorDivider)
                 views.setInt(R.id.widget_divider_2, "setBackgroundColor", colorDivider)
                 getVectorBitmap(context, R.drawable.ic_widget_pulse, 14, 14)?.let {
