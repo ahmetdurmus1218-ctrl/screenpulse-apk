@@ -48,6 +48,21 @@ class LockScreenNotificationService : Service() {
         startForeground(NotificationHelper.NOTIFICATION_ID, NotificationHelper.buildPlaceholderNotification(this))
         registerReceivers()
         scope.launch { refresh() }
+        startTicker()
+    }
+
+    /** Guarantees a refresh roughly every 45s regardless of what's happening with the
+     *  screen — ACTION_TIME_TICK (used as a secondary trigger via registerReceivers)
+     *  only fires while the screen is ON, so it can't be relied on alone for a
+     *  consistent cadence. This only runs while the person has explicitly chosen
+     *  "Sürekli Açık", which already accepts the associated battery trade-off. */
+    private fun startTicker() {
+        scope.launch {
+            while (kotlinx.coroutines.isActive) {
+                kotlinx.coroutines.delay(45_000L)
+                refresh()
+            }
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
