@@ -186,9 +186,9 @@ open class ScreenPulseWidgetProvider(
         val soffStr = formatWidgetTime(screenOffMs)
         val sinceChargeStr = formatWidgetTime(timeSinceChargeMs)
         val lastChargeStr = if (batteryInfo.lastChargeTimeMs > 0) {
-            "Şarj: " + SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date(batteryInfo.lastChargeTimeMs))
+            "Fişe Takıldı: " + SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(batteryInfo.lastChargeTimeMs))
         } else {
-            "Şarj: Bilinmiyor"
+            "Fişe Takıldı: Bilinmiyor"
         }
 
         val batteryIconBitmap = drawMiniBatteryIcon(batteryInfo.percentage, batteryInfo.isCharging, isDark)
