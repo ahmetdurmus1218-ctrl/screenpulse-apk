@@ -35,6 +35,13 @@ object NotificationHelper {
 
     fun ensureChannel(context: Context) {
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        // Clean up the orphaned pre-v2 channel — it's dead weight in system notification
+        // settings for anyone who had the app before the importance-level fix. Safe no-op
+        // if it was never created.
+        try {
+            manager.deleteNotificationChannel("screenpulse_lockscreen")
+        } catch (_: Throwable) {
+        }
         if (manager.getNotificationChannel(CHANNEL_ID) != null) return
         val channel = NotificationChannel(
             CHANNEL_ID,

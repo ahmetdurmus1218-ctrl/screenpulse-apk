@@ -423,6 +423,11 @@ class UsageRepository(
         usageDao.closeDanglingBackgroundMediaLogs(System.currentTimeMillis(), exceptIds)
     }
 
+    suspend fun deleteOldBackgroundMediaLogs() {
+        val thirtyDaysAgo = System.currentTimeMillis() - 30L * 24 * 3600 * 1000L
+        usageDao.deleteOldBackgroundMediaLogs(thirtyDaysAgo)
+    }
+
     suspend fun getBackgroundMediaTotals(start: Long, end: Long) = usageDao.getBackgroundMediaTotals(start, end)
 
     fun hasNotificationAccess(context: Context): Boolean {

@@ -68,6 +68,10 @@ class BatteryStateWorker(
             // in practice) passive updatePeriodMillis schedule.
             com.example.widget.ScreenPulseWidgetProvider.updateAllWidgets(applicationContext)
 
+            // Keep background_media_logs from growing forever (mirrors the existing
+            // battery_logs 7-day cleanup) — cheap no-op if there's nothing old to delete.
+            app.repository.deleteOldBackgroundMediaLogs()
+
             Result.success()
         } catch (e: Exception) {
             Result.retry()

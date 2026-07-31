@@ -33,6 +33,11 @@ interface UsageDao {
     @Query("UPDATE background_media_logs SET endTime = :now WHERE endTime IS NULL AND id NOT IN (:exceptIds)")
     suspend fun closeDanglingBackgroundMediaLogs(now: Long, exceptIds: List<Long> = emptyList())
 
+    // Retention cleanup — mirrors deleteOldBatteryLogs. Without this, background_media_logs
+    // grows forever since every play/pause transition adds a row.
+    @Query("DELETE FROM background_media_logs WHERE startTime < :before")
+    suspend fun deleteOldBackgroundMediaLogs(before: Long)
+
     // Total ms per package overlapping [start, end]: for each session, only the portion
     // that falls within the requested window counts (min(endTime,end) - max(startTime,start)).
     @Query(
