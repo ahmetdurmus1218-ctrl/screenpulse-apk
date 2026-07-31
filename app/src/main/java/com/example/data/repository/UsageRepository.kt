@@ -267,11 +267,53 @@ class UsageRepository(
         settingsManager.setWasCharging(isChargingNow)
     }
 
+    /** Per-app foreground time computed from raw usage events (MOVE_TO_FOREGROUND /
+     *  MOVE_TO_BACKGROUND), not queryAndAggregateUsageStats — which is unreliable for
+     *  narrow/arbitrary time windows and can report totals that don't even fit inside
+     *  the requested window (this was the actual bug behind multiple apps each showing
+     *  ~60-80 minutes within a 73-minute drag-selected range). Same accurate approach
+     *  already used successfully for screen on/off time. */
+    private fun getAppForegroundTimeFromEvents(startTime: Long, endTime: Long): Map<String, Long> {
+        if (!hasUsageStatsPermission() || endTime <= startTime) return emptyMap()
+        val cappedStartTime = maxOf(startTime, endTime - 7L * 24 * 3600 * 1000L)
+        val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        val events = usageStatsManager.queryEvents(cappedStartTime, endTime)
+        val event = android.app.usage.UsageEvents.Event()
+
+        val totals = mutableMapOf<String, Long>()
+        val openStart = mutableMapOf<String, Long>() // packageName -> when it moved to foreground
+
+        while (events.hasNextEvent()) {
+            events.getNextEvent(event)
+            val ts = event.timeStamp.coerceIn(startTime, endTime)
+            val pkg = event.packageName ?: continue
+            when (event.eventType) {
+                1 -> { // MOVE_TO_FOREGROUND
+                    openStart[pkg] = ts
+                }
+                2 -> { // MOVE_TO_BACKGROUND
+                    val start = openStart.remove(pkg)
+                    if (start != null && ts > start) {
+                        totals[pkg] = (totals[pkg] ?: 0L) + (ts - start)
+                    }
+                }
+            }
+        }
+        // Anything still "open" (foreground, no matching background event yet) was in
+        // the foreground until endTime.
+        openStart.forEach { (pkg, start) ->
+            if (endTime > start) {
+                totals[pkg] = (totals[pkg] ?: 0L) + (endTime - start)
+            }
+        }
+        return totals
+    }
+
     suspend fun getAppUsageList(startTime: Long, endTime: Long = System.currentTimeMillis()): List<AppUsageItem> {
         if (!hasUsageStatsPermission()) return emptyList()
 
         val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-        val stats = usageStatsManager.queryAndAggregateUsageStats(startTime, endTime)
+        val eventBasedForegroundMs = getAppForegroundTimeFromEvents(startTime, endTime)
 
         // Today's Usage
         val calendar = Calendar.getInstance().apply {
@@ -291,9 +333,9 @@ class UsageRepository(
         val list = mutableListOf<AppUsageItem>()
         var totalForegroundSinceChargeMs = 0L
 
-        val filteredStats = stats.filter { it.value.totalTimeInForeground > 0 }
-        for (stat in filteredStats.values) {
-            totalForegroundSinceChargeMs += stat.totalTimeInForeground
+        val filteredStats = eventBasedForegroundMs.filter { it.value > 0 }
+        for (ms in filteredStats.values) {
+            totalForegroundSinceChargeMs += ms
         }
 
         // Real background playback time (e.g. YouTube/Spotify with the screen off),
@@ -304,8 +346,7 @@ class UsageRepository(
             emptyMap()
         }
 
-        for ((packageName, stat) in filteredStats) {
-            val screenTimeMs = stat.totalTimeInForeground
+        for ((packageName, screenTimeMs) in filteredStats) {
             val todayUsageMs = todayStats[packageName]?.totalTimeInForeground ?: 0L
             val weeklyUsageMs = weeklyStats[packageName]?.totalTimeInForeground ?: 0L
             val dailyAverageMs = weeklyUsageMs / 7
