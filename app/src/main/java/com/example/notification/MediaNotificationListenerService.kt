@@ -53,6 +53,29 @@ class MediaNotificationListenerService : NotificationListenerService() {
             // If this ever throws (permission timing edge case on some OEMs), we simply
             // won't get background media data this session — never crash the listener.
         }
+        startDanglingSessionSweeper()
+    }
+
+    /** BUG FIX: previously, a session only got marked "closed" via a real onPlaybackStateChanged
+     *  callback or the one-time cleanup in onListenerConnected(). If this service's process was
+     *  killed and restarted WITHOUT onListenerDisconnected() ever firing (common — OS process
+     *  death isn't a graceful unbind), the in-memory openSessions map was lost but the DB row
+     *  stayed open (endTime = NULL) indefinitely. Since our totals query treats a NULL endTime
+     *  as "still ongoing right now", that stale row got counted as active in ANY later query —
+     *  e.g. a session that actually ended at 9am appearing to overlap a completely unrelated
+     *  11:52–14:03 selection. This periodic sweep closes anything not in our current in-memory
+     *  tracking (i.e. genuinely abandoned rows) every 5 minutes, bounding the damage window. */
+    private fun startDanglingSessionSweeper() {
+        scope.launch {
+            while (job.isActive) {
+                kotlinx.coroutines.delay(5 * 60_000L)
+                try {
+                    (applicationContext as ScreenPulseApplication).repository
+                        .closeDanglingBackgroundMediaSessions(openSessions.values.toList())
+                } catch (_: Throwable) {
+                }
+            }
+        }
     }
 
     override fun onListenerDisconnected() {

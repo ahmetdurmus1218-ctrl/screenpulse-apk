@@ -419,8 +419,8 @@ class UsageRepository(
         usageDao.closeBackgroundMediaLog(id, endTime)
     }
 
-    suspend fun closeDanglingBackgroundMediaSessions(exceptId: Long = -1) {
-        usageDao.closeDanglingBackgroundMediaLogs(System.currentTimeMillis(), exceptId)
+    suspend fun closeDanglingBackgroundMediaSessions(exceptIds: List<Long> = emptyList()) {
+        usageDao.closeDanglingBackgroundMediaLogs(System.currentTimeMillis(), exceptIds)
     }
 
     suspend fun getBackgroundMediaTotals(start: Long, end: Long) = usageDao.getBackgroundMediaTotals(start, end)

@@ -30,8 +30,8 @@ interface UsageDao {
     // Closes any session left dangling (endTime still null) from a previous process —
     // e.g. the app/service was killed mid-playback. Called once on service start so a
     // stale "still open" row from days ago never inflates totals going forward.
-    @Query("UPDATE background_media_logs SET endTime = :now WHERE endTime IS NULL AND id != :exceptId")
-    suspend fun closeDanglingBackgroundMediaLogs(now: Long, exceptId: Long = -1)
+    @Query("UPDATE background_media_logs SET endTime = :now WHERE endTime IS NULL AND id NOT IN (:exceptIds)")
+    suspend fun closeDanglingBackgroundMediaLogs(now: Long, exceptIds: List<Long> = emptyList())
 
     // Total ms per package overlapping [start, end]: for each session, only the portion
     // that falls within the requested window counts (min(endTime,end) - max(startTime,start)).
