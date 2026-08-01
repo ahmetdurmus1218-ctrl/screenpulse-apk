@@ -309,6 +309,37 @@ class UsageRepository(
         return totals
     }
 
+    /** Diagnostic only: dumps the raw MOVE_TO_FOREGROUND/BACKGROUND events Android's
+     *  queryEvents() actually returns for [startTime, endTime], including their real
+     *  timestamps — so we can see directly whether the OS is honoring the requested
+     *  bounds (some OEM UsageStatsManager implementations don't). */
+    fun getRawUsageEventsDebug(startTime: Long, endTime: Long): String {
+        if (!hasUsageStatsPermission()) return "İzin yok"
+        val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        val events = usageStatsManager.queryEvents(startTime, endTime)
+        val event = android.app.usage.UsageEvents.Event()
+        val timeFmt = java.text.SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+        val sb = StringBuilder()
+        sb.append("İstenen aralık: ${timeFmt.format(Date(startTime))} - ${timeFmt.format(Date(endTime))}\n\n")
+        var count = 0
+        var outOfBounds = 0
+        while (events.hasNextEvent() && count < 150) {
+            events.getNextEvent(event)
+            val typeStr = when (event.eventType) {
+                1 -> "→ÖN PLAN"
+                2 -> "→ARKA PLAN"
+                else -> "tip:${event.eventType}"
+            }
+            val isOut = event.timeStamp < startTime || event.timeStamp > endTime
+            if (isOut) outOfBounds++
+            val shortPkg = event.packageName?.substringAfterLast('.') ?: "?"
+            sb.append("${timeFmt.format(Date(event.timeStamp))} $typeStr $shortPkg${if (isOut) " ⚠SINIR DIŞI" else ""}\n")
+            count++
+        }
+        sb.insert(0, "Toplam $count olay, $outOfBounds tanesi sınır dışı zaman damgalı\n\n")
+        return sb.toString()
+    }
+
     suspend fun getAppUsageList(startTime: Long, endTime: Long = System.currentTimeMillis()): List<AppUsageItem> {
         if (!hasUsageStatsPermission()) return emptyList()
 

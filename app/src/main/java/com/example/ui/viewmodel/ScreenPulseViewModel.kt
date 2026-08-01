@@ -69,6 +69,9 @@ class ScreenPulseViewModel(
         }
     }
 
+    fun getRawUsageEventsDebug(startTime: Long, endTime: Long): String =
+        repository.getRawUsageEventsDebug(startTime, endTime)
+
     fun hasNotificationAccess(context: android.content.Context): Boolean =
         repository.hasNotificationAccess(context)
 
