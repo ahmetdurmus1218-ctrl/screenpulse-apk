@@ -4,8 +4,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -50,8 +48,6 @@ fun AnalyticsChartsScreen(
     var selectedRange by remember { mutableStateOf<Pair<Long, Long>?>(null) }
     var selectedRangeApps by remember { mutableStateOf<List<com.example.data.model.AppUsageItem>>(emptyList()) }
     var isLoadingRangeApps by remember { mutableStateOf(false) }
-    var debugRawEvents by remember { mutableStateOf("") }
-    var showDebugRawEvents by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
     Box(
@@ -217,15 +213,12 @@ fun AnalyticsChartsScreen(
                                             isLoadingRangeApps = true
                                             coroutineScope.launch {
                                                 selectedRangeApps = viewModel.getAppUsageForRange(start, end)
-                                                debugRawEvents = viewModel.getRawUsageEventsDebug(start, end)
                                                 isLoadingRangeApps = false
                                             }
                                         },
                                         onSelectionCleared = {
                                             selectedRange = null
                                             selectedRangeApps = emptyList()
-                                            debugRawEvents = ""
-                                            showDebugRawEvents = false
                                         }
                                     )
 
@@ -367,30 +360,6 @@ fun AnalyticsChartsScreen(
                                                         )
                                                     }
                                                 }
-                                            }
-                                        }
-
-                                        if (debugRawEvents.isNotEmpty()) {
-                                            Spacer(modifier = Modifier.height(10.dp))
-                                            Text(
-                                                text = if (showDebugRawEvents) "Ham Veriyi Gizle ▲" else "Ham Veriyi Göster (Debug) ▼",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.primary,
-                                                modifier = Modifier.clickable { showDebugRawEvents = !showDebugRawEvents }
-                                            )
-                                            if (showDebugRawEvents) {
-                                                Spacer(modifier = Modifier.height(6.dp))
-                                                Text(
-                                                    text = debugRawEvents,
-                                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .heightIn(max = 400.dp)
-                                                        .verticalScroll(rememberScrollState())
-                                                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                                                        .padding(8.dp)
-                                                )
                                             }
                                         }
                                     }
