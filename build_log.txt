@@ -1,25 +1,25 @@
 Starting a Gradle Daemon (subsequent builds will be faster)
 Calculating task graph as no cached configuration is available for tasks: assembleDebug
-> Task :app:generateDebugAssets UP-TO-DATE
 > Task :app:preBuild UP-TO-DATE
+> Task :app:generateDebugAssets UP-TO-DATE
 > Task :app:preDebugBuild UP-TO-DATE
 > Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
 > Task :app:generateDebugBuildConfig FROM-CACHE
-> Task :app:generateDebugResources FROM-CACHE
 > Task :app:processDebugGoogleServices FROM-CACHE
+> Task :app:generateDebugResources FROM-CACHE
 > Task :app:javaPreCompileDebug FROM-CACHE
 > Task :app:packageDebugResources FROM-CACHE
+> Task :app:checkDebugDuplicateClasses
+> Task :app:mergeDebugAssets
+> Task :app:desugarDebugFileDependencies FROM-CACHE
+> Task :app:compressDebugAssets FROM-CACHE
+> Task :app:mergeLibDexDebug FROM-CACHE
 > Task :app:processDebugNavigationResources FROM-CACHE
 > Task :app:parseDebugLocalResources FROM-CACHE
 > Task :app:generateDebugRFile FROM-CACHE
-> Task :app:desugarDebugFileDependencies FROM-CACHE
-> Task :app:mergeDebugAssets
-> Task :app:checkDebugAarMetadata
-> Task :app:compressDebugAssets FROM-CACHE
-> Task :app:checkDebugDuplicateClasses
 > Task :app:mapDebugSourceSetPaths
-> Task :app:mergeLibDexDebug FROM-CACHE
 > Task :app:compileDebugNavigationResources FROM-CACHE
+> Task :app:checkDebugAarMetadata
 > Task :app:createDebugCompatibleScreenManifests
 > Task :app:extractDeepLinksDebug FROM-CACHE
 > Task :app:processDebugMainManifest FROM-CACHE
@@ -28,20 +28,20 @@ Calculating task graph as no cached configuration is available for tasks: assemb
 > Task :app:mergeDebugJniLibFolders
 > Task :app:mergeDebugResources FROM-CACHE
 > Task :app:mergeDebugNativeLibs
-> Task :app:processDebugResources FROM-CACHE
+> Task :app:mergeExtDexDebug FROM-CACHE
 > Task :app:validateSigningDebug
 > Task :app:writeDebugAppMetadata
 > Task :app:writeDebugSigningConfigVersions
-> Task :app:mergeExtDexDebug FROM-CACHE
 > Task :app:stripDebugDebugSymbols
+> Task :app:processDebugResources FROM-CACHE
 > Task :app:kspDebugKotlin
 
 > Task :app:compileDebugKotlin
 w: file:///home/runner/work/screenpulse-apk/screenpulse-apk/app/src/main/java/com/example/ScreenPulseApplication.kt:34:28 This is a delicate API and its use requires care. Make sure you fully read and understand documentation of the declaration that is marked as a delicate API.
 w: file:///home/runner/work/screenpulse-apk/screenpulse-apk/app/src/main/java/com/example/data/database/ScreenPulseDatabase.kt:47:18 'fun fallbackToDestructiveMigration(): RoomDatabase.Builder<ScreenPulseDatabase>' is deprecated. Replace by overloaded version with parameter to indicate if all tables should be dropped or not.
 w: file:///home/runner/work/screenpulse-apk/screenpulse-apk/app/src/main/java/com/example/data/repository/UsageRepository.kt:31:20 'fun unsafeCheckOpNoThrow(p0: String, p1: Int, p2: String): Int' is deprecated. Deprecated in Java.
-w: file:///home/runner/work/screenpulse-apk/screenpulse-apk/app/src/main/java/com/example/ui/screens/AnalyticsChartsScreen.kt:475:73 'val Icons.Filled.TrendingUp: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.TrendingUp.
-w: file:///home/runner/work/screenpulse-apk/screenpulse-apk/app/src/main/java/com/example/ui/screens/AnalyticsChartsScreen.kt:625:60 'constructor(p0: String!): Locale' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/screenpulse-apk/screenpulse-apk/app/src/main/java/com/example/ui/screens/AnalyticsChartsScreen.kt:444:73 'val Icons.Filled.TrendingUp: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.TrendingUp.
+w: file:///home/runner/work/screenpulse-apk/screenpulse-apk/app/src/main/java/com/example/ui/screens/AnalyticsChartsScreen.kt:594:60 'constructor(p0: String!): Locale' is deprecated. Deprecated in Java.
 w: file:///home/runner/work/screenpulse-apk/screenpulse-apk/app/src/main/java/com/example/ui/screens/AppUsageScreen.kt:274:21 'fun Divider(modifier: Modifier = ..., thickness: Dp = ..., color: Color = ...): Unit' is deprecated. Renamed to HorizontalDivider.
 w: file:///home/runner/work/screenpulse-apk/screenpulse-apk/app/src/main/java/com/example/ui/screens/DashboardScreen.kt:180:53 'val Icons.Filled.OpenInNew: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.OpenInNew.
 w: file:///home/runner/work/screenpulse-apk/screenpulse-apk/app/src/main/java/com/example/ui/screens/DashboardScreen.kt:563:32 'val Icons.Outlined.TrendingDown: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.TrendingDown.
@@ -60,8 +60,8 @@ See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
 > Task :app:packageDebug
 > Task :app:assembleDebug
 > Task :app:createDebugApkListingFileRedirect
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1785580249248.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1785580699998.json
 
-BUILD SUCCESSFUL in 50s
+BUILD SUCCESSFUL in 51s
 39 actionable tasks: 20 executed, 19 from cache
 Configuration cache entry stored.
