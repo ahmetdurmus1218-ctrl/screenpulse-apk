@@ -254,16 +254,19 @@ class ScreenPulseViewModel(
                 // look like it never accumulates).
                 val (daySot, daySoff) = repository.getScreenOnOffFromEvents(dayStart, dayEnd)
 
-                if (daySot > 0) {
-                    val history = UsageHistoryEntity(
-                        date = dateStr,
-                        screenOnTimeMs = daySot,
-                        screenOffTimeMs = daySoff,
-                        batteryUsedPct = -1, // unknown: no real battery log exists for days before install
-                        totalTimeSinceChargeMs = 24 * 3600 * 1000L
-                    )
-                    repository.saveUsageHistory(history)
-                }
+                // BUG FIX: this used to only save the day if daySot > 0, silently skipping
+                // any day with zero measured screen-on time. That left a permanent gap in
+                // usage_history for that date, which made the "Gün"/"Hafta" charts reach
+                // back further than intended and show a repeated weekday / shifted week.
+                // Always persist the day (even a real 0) so the 7-day window stays intact.
+                val history = UsageHistoryEntity(
+                    date = dateStr,
+                    screenOnTimeMs = daySot,
+                    screenOffTimeMs = daySoff,
+                    batteryUsedPct = -1, // unknown: no real battery log exists for days before install
+                    totalTimeSinceChargeMs = 24 * 3600 * 1000L
+                )
+                repository.saveUsageHistory(history)
             }
         }
     }

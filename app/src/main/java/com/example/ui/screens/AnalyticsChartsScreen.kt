@@ -555,7 +555,10 @@ fun getChartDataForPeriod(
     history: List<UsageHistoryEntity>,
     hourlyBuckets: List<Long> = List(6) { 0L }
 ): List<UsageHistoryEntity> {
-    if (history.isEmpty() && periodIndex != 0) return emptyList()
+    // Daily/Weekly (1, 2) build their own calendar-based skeleton below and handle an
+    // empty history list fine (all-zero bars); only Monthly (3) and the default case
+    // have nothing meaningful to show with no data at all.
+    if (history.isEmpty() && periodIndex != 0 && periodIndex != 1 && periodIndex != 2) return emptyList()
     val sdfOutput = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
     return when (periodIndex) {
@@ -572,20 +575,53 @@ fun getChartDataForPeriod(
                 )
             }
         }
-        1 -> { // Daily (show past 7 days)
-            history.takeLast(7)
+        1 -> { // Daily (real last 7 calendar days, gaps filled with 0 — NOT just the
+            // last 7 rows in the table, which skews the whole window and can repeat
+            // a weekday when a day's record is missing, e.g. from populateHistoryIfEmpty()
+            // skipping days with zero measured screen-on time).
+            val byDate = history.associateBy { it.date }
+            val cal = Calendar.getInstance()
+            (6 downTo 0).map { daysAgo ->
+                cal.time = Date()
+                cal.add(Calendar.DAY_OF_YEAR, -daysAgo)
+                val dateStr = sdfOutput.format(cal.time)
+                byDate[dateStr] ?: UsageHistoryEntity(
+                    date = dateStr,
+                    screenOnTimeMs = 0L,
+                    screenOffTimeMs = 0L,
+                    batteryUsedPct = -1,
+                    totalTimeSinceChargeMs = 0L
+                )
+            }
         }
-        2 -> { // Weekly (aggregate days into week groups)
-            val chunked = history.chunked(7)
-            chunked.mapIndexed { index, list ->
-                val weekSot = list.sumOf { it.screenOnTimeMs }
-                val weekSoff = list.sumOf { it.screenOffTimeMs }
+        2 -> { // Weekly (real calendar weeks, Monday-start, gaps filled with 0 — same
+            // fix as Daily: grouping raw table rows by chunked(7) shifted whole weeks
+            // whenever a day was missing from the table).
+            val byDate = history.associateBy { it.date }
+            val today = Calendar.getInstance()
+            val currentWeekStart = Calendar.getInstance().apply {
+                time = today.time
+                val dow = get(Calendar.DAY_OF_WEEK) // Sunday=1 ... Saturday=7
+                val daysSinceMonday = (dow + 5) % 7 // Monday=0 ... Sunday=6
+                add(Calendar.DAY_OF_YEAR, -daysSinceMonday)
+                set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+            }
+            (3 downTo 0).map { weeksAgo ->
+                val weekStart = (currentWeekStart.clone() as Calendar).apply {
+                    add(Calendar.DAY_OF_YEAR, -weeksAgo * 7)
+                }
+                val weekDates = (0..6).map { offset ->
+                    val d = (weekStart.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, offset) }
+                    sdfOutput.format(d.time)
+                }
+                val weekEntries = weekDates.mapNotNull { byDate[it] }
                 UsageHistoryEntity(
-                    date = "Hf ${index + 1}",
-                    screenOnTimeMs = weekSot,
-                    screenOffTimeMs = weekSoff,
-                    batteryUsedPct = list.sumOf { it.batteryUsedPct },
-                    totalTimeSinceChargeMs = list.sumOf { it.totalTimeSinceChargeMs }
+                    date = "Hf ${4 - weeksAgo}",
+                    screenOnTimeMs = weekEntries.sumOf { it.screenOnTimeMs },
+                    screenOffTimeMs = weekEntries.sumOf { it.screenOffTimeMs },
+                    batteryUsedPct = weekEntries.sumOf { it.batteryUsedPct.coerceAtLeast(0) },
+                    totalTimeSinceChargeMs = weekEntries.sumOf { it.totalTimeSinceChargeMs }
                 )
             }
         }
