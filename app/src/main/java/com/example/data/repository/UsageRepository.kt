@@ -286,21 +286,43 @@ class UsageRepository(
         while (events.hasNextEvent()) {
             events.getNextEvent(event)
             val ts = event.timeStamp.coerceIn(startTime, endTime)
-            val pkg = event.packageName ?: continue
             when (event.eventType) {
-                1 -> { // MOVE_TO_FOREGROUND
-                    openStart[pkg] = ts
+                16 -> { // SCREEN_NON_INTERACTIVE (screen off). Nothing can genuinely be in
+                    // the foreground with the screen off, so this closes out ANY app still
+                    // marked "open" at this point — not a guessed cap, but the same real
+                    // screen-off signal getScreenOnOffFromEvents already relies on. This is
+                    // what fixes an app (e.g. Chrome opened via a Custom Tab from another
+                    // app) whose MOVE_TO_BACKGROUND event never arrives: instead of counting
+                    // it as foreground all the way to endTime, it's correctly cut off at the
+                    // next real screen-off, which is almost always very soon after.
+                    if (openStart.isNotEmpty()) {
+                        openStart.forEach { (pkg, start) ->
+                            if (ts > start) totals[pkg] = (totals[pkg] ?: 0L) + (ts - start)
+                        }
+                        openStart.clear()
+                    }
                 }
-                2 -> { // MOVE_TO_BACKGROUND
-                    val start = openStart.remove(pkg)
-                    if (start != null && ts > start) {
-                        totals[pkg] = (totals[pkg] ?: 0L) + (ts - start)
+                else -> {
+                    val pkg = event.packageName
+                    if (pkg != null) {
+                        when (event.eventType) {
+                            1 -> { // MOVE_TO_FOREGROUND
+                                openStart[pkg] = ts
+                            }
+                            2 -> { // MOVE_TO_BACKGROUND
+                                val start = openStart.remove(pkg)
+                                if (start != null && ts > start) {
+                                    totals[pkg] = (totals[pkg] ?: 0L) + (ts - start)
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
-        // Anything still "open" (foreground, no matching background event yet) was in
-        // the foreground until endTime.
+        // Anything still "open" at the very end (foreground, no matching background AND
+        // no screen-off event before endTime) really was in the foreground continuously
+        // until now — e.g. someone reading for hours with the screen staying on.
         openStart.forEach { (pkg, start) ->
             if (endTime > start) {
                 totals[pkg] = (totals[pkg] ?: 0L) + (endTime - start)
