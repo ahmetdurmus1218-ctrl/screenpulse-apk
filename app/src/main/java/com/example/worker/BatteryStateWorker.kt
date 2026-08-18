@@ -61,6 +61,14 @@ class BatteryStateWorker(
 
             settingsManager.setWasCharging(isChargingNow)
 
+            // BUG FIX: battery % was only ever logged when the app was actually open
+            // (ScreenPulseViewModel.loadData() -> logCurrentBatteryState()). This worker
+            // runs every ~15 min regardless of whether the app is open, but never wrote
+            // a sample itself — so overnight charging (or any long stretch with the app
+            // closed) left a gap in battery_logs, and "Pil Tüketim Eğrisi" just drew a
+            // straight interpolated line across it, skipping the real peak entirely.
+            app.repository.logCurrentBatteryState()
+
             // Refresh widgets here too — this worker already runs every ~15 min
             // regardless of the lock-screen notification feature's on/off state, so
             // this gives widgets a real background refresh even when that feature is
