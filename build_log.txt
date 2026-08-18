@@ -1,72 +1,40 @@
-
-Welcome to Gradle 9.3.1!
-
-Here are the highlights of this release:
- - Test reporting improvements
- - Error and warning improvements
- - Build authoring improvements
-
-For more details see https://docs.gradle.org/9.3.1/release-notes.html
-
 Starting a Gradle Daemon (subsequent builds will be faster)
 Calculating task graph as no cached configuration is available for tasks: assembleDebug
 > Task :app:preBuild UP-TO-DATE
 > Task :app:generateDebugAssets UP-TO-DATE
 > Task :app:preDebugBuild UP-TO-DATE
 > Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
-> Task :app:generateDebugResources
-
-> Task :app:processDebugGoogleServices
-File google-services.json is missing.
-The Google Services Plugin cannot function without it.
-Searched locations: /home/runner/work/screenpulse-apk/screenpulse-apk/app/src/debug/google-services.json, /home/runner/work/screenpulse-apk/screenpulse-apk/app/src/debug/google-services.json, /home/runner/work/screenpulse-apk/screenpulse-apk/app/src/google-services.json, /home/runner/work/screenpulse-apk/screenpulse-apk/app/src/debug/google-services.json, /home/runner/work/screenpulse-apk/screenpulse-apk/app/src/Debug/google-services.json, /home/runner/work/screenpulse-apk/screenpulse-apk/app/google-services.json
-
-> Task :app:generateDebugBuildConfig
-> Task :app:packageDebugResources
-> Task :app:javaPreCompileDebug
-> Task :app:processDebugNavigationResources
-> Task :app:parseDebugLocalResources
-> Task :app:generateDebugRFile
-> Task :app:desugarDebugFileDependencies
+> Task :app:processDebugGoogleServices FROM-CACHE
+> Task :app:generateDebugBuildConfig FROM-CACHE
+> Task :app:generateDebugResources FROM-CACHE
+> Task :app:packageDebugResources FROM-CACHE
+> Task :app:javaPreCompileDebug FROM-CACHE
 > Task :app:mergeDebugAssets
-> Task :app:compressDebugAssets
-> Task :app:mapDebugSourceSetPaths
-> Task :app:checkDebugAarMetadata
-> Task :app:compileDebugNavigationResources
-> Task :app:createDebugCompatibleScreenManifests
-> Task :app:extractDeepLinksDebug
 > Task :app:checkDebugDuplicateClasses
-Exception in thread "AWT-EventQueue-0" java.lang.NullPointerException: Cannot invoke "ksp.com.intellij.openapi.application.Application.getService(java.lang.Class)" because the return value of "ksp.com.intellij.openapi.application.ApplicationManager.getApplication()" is null
-	at ksp.com.intellij.openapi.fileEditor.FileDocumentManager.getInstance(FileDocumentManager.java:35)
-	at ksp.com.intellij.openapi.fileTypes.BinaryFileTypeDecompilers.lambda$notifyDecompilerSetChange$1(BinaryFileTypeDecompilers.java:29)
-	at java.desktop/java.awt.event.InvocationEvent.dispatch(InvocationEvent.java:318)
-	at java.desktop/java.awt.EventQueue.dispatchEventImpl(EventQueue.java:773)
-	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:720)
-	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:714)
-	at java.base/java.security.AccessController.doPrivileged(AccessController.java:400)
-	at java.base/java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:87)
-	at java.desktop/java.awt.EventQueue.dispatchEvent(EventQueue.java:742)
-	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(EventDispatchThread.java:203)
-	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(EventDispatchThread.java:124)
-	at java.desktop/java.awt.EventDispatchThread.pumpEventsForHierarchy(EventDispatchThread.java:113)
-	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:109)
-	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:101)
-	at java.desktop/java.awt.EventDispatchThread.run(EventDispatchThread.java:90)
-> Task :app:kspDebugKotlin
-> Task :app:mergeDebugResources
-> Task :app:processDebugMainManifest
-> Task :app:mergeExtDexDebug
-> Task :app:compileDebugKotlin
-> Task :app:mergeLibDexDebug
-> Task :app:processDebugManifest
-> Task :app:processDebugManifestForPackage
+> Task :app:compressDebugAssets FROM-CACHE
+> Task :app:desugarDebugFileDependencies FROM-CACHE
+> Task :app:mergeLibDexDebug FROM-CACHE
+> Task :app:processDebugNavigationResources FROM-CACHE
+> Task :app:parseDebugLocalResources FROM-CACHE
+> Task :app:generateDebugRFile FROM-CACHE
+> Task :app:mapDebugSourceSetPaths
+> Task :app:compileDebugNavigationResources FROM-CACHE
+> Task :app:checkDebugAarMetadata
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug FROM-CACHE
+> Task :app:processDebugMainManifest FROM-CACHE
+> Task :app:processDebugManifest FROM-CACHE
+> Task :app:processDebugManifestForPackage FROM-CACHE
 > Task :app:mergeDebugJniLibFolders
+> Task :app:mergeDebugResources FROM-CACHE
 > Task :app:mergeDebugNativeLibs
-> Task :app:stripDebugDebugSymbols
+> Task :app:mergeExtDexDebug FROM-CACHE
 > Task :app:validateSigningDebug
+> Task :app:processDebugResources FROM-CACHE
 > Task :app:writeDebugAppMetadata
 > Task :app:writeDebugSigningConfigVersions
-> Task :app:processDebugResources
+> Task :app:stripDebugDebugSymbols
+> Task :app:kspDebugKotlin
 
 > Task :app:compileDebugKotlin
 w: file:///home/runner/work/screenpulse-apk/screenpulse-apk/app/src/main/java/com/example/ScreenPulseApplication.kt:34:28 This is a delicate API and its use requires care. Make sure you fully read and understand documentation of the declaration that is marked as a delicate API.
@@ -85,15 +53,15 @@ w: file:///home/runner/work/screenpulse-apk/screenpulse-apk/app/src/main/java/co
 See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
 
 > Task :app:processDebugJavaRes
+> Task :app:compileDebugJavaWithJavac FROM-CACHE
 > Task :app:mergeDebugJavaResource
-> Task :app:compileDebugJavaWithJavac
 > Task :app:dexBuilderDebug
 > Task :app:mergeProjectDexDebug
 > Task :app:packageDebug
 > Task :app:assembleDebug
 > Task :app:createDebugApkListingFileRedirect
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1786864314756.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1787046231309.json
 
-BUILD SUCCESSFUL in 3m 52s
-39 actionable tasks: 39 executed
+BUILD SUCCESSFUL in 59s
+39 actionable tasks: 19 executed, 20 from cache
 Configuration cache entry stored.
