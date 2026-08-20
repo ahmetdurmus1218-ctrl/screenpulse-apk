@@ -207,7 +207,13 @@ class UsageRepository(
 
         while (events.hasNextEvent()) {
             events.getNextEvent(event)
-            val ts = event.timeStamp.coerceIn(startTime, endTime)
+            val rawTs = event.timeStamp
+            // Same fix as getAppForegroundTimeFromEvents below: discard events genuinely
+            // outside the queried window instead of clamping them into it, since a stale/
+            // out-of-bounds event (OEM UsageStatsManager quirk) would otherwise get
+            // misread as happening right at the window boundary.
+            if (rawTs < cappedStartTime || rawTs > endTime) continue
+            val ts = rawTs.coerceIn(startTime, endTime)
             when (event.eventType) {
                 15 -> { // UsageEvents.Event.SCREEN_INTERACTIVE
                     if (screenOnNow == null) {
@@ -285,7 +291,20 @@ class UsageRepository(
 
         while (events.hasNextEvent()) {
             events.getNextEvent(event)
-            val ts = event.timeStamp.coerceIn(startTime, endTime)
+            val rawTs = event.timeStamp
+            // BUG FIX: previously did `rawTs.coerceIn(startTime, endTime)`, which took ANY
+            // event Android handed back — even one genuinely outside the requested window —
+            // and forcibly relocated it to the window boundary instead of discarding it.
+            // On this OEM (Vivo/Funtouch), queryEvents() can return a stale, long-orphaned
+            // MOVE_TO_FOREGROUND event from days earlier (e.g. an app since uninstalled)
+            // even for a narrow, unrelated query window. Clamping made that old event look
+            // like it started exactly at the window's start, then — since no matching close/
+            // screen-off ever follows within the window — it got stretched across nearly the
+            // entire selection. A real, in-bounds event's timestamp is always inside
+            // [cappedStartTime, endTime] already, so anything outside that range is bogus
+            // and must be dropped, not relocated.
+            if (rawTs < cappedStartTime || rawTs > endTime) continue
+            val ts = rawTs.coerceIn(startTime, endTime)
             when (event.eventType) {
                 16 -> { // SCREEN_NON_INTERACTIVE (screen off). Nothing can genuinely be in
                     // the foreground with the screen off, so this closes out ANY app still
