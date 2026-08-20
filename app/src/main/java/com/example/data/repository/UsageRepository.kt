@@ -374,7 +374,19 @@ class UsageRepository(
         val list = mutableListOf<AppUsageItem>()
         var totalForegroundSinceChargeMs = 0L
 
-        val filteredStats = eventBasedForegroundMs.filter { it.value > 0 }
+        // Only keep packages still actually installed — see the NameNotFoundException
+        // handling below for why an uninstalled package can still show up here with
+        // bogus time on this OEM. Filtering here too (not just when building `list`)
+        // keeps a since-removed ghost entry's inflated time out of the percentage
+        // denominator, so it doesn't dilute every real app's percentageOfTotal.
+        val filteredStats = eventBasedForegroundMs.filter { (pkg, ms) ->
+            ms > 0 && try {
+                pm.getApplicationInfo(pkg, 0)
+                true
+            } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+                false
+            }
+        }
         for (ms in filteredStats.values) {
             totalForegroundSinceChargeMs += ms
         }
@@ -398,8 +410,18 @@ class UsageRepository(
                 val appInfo = pm.getApplicationInfo(packageName, 0)
                 appLabel = pm.getApplicationLabel(appInfo).toString()
                 icon = pm.getApplicationIcon(appInfo)
+            } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+                // BUG FIX: the package is no longer installed on the device — it showed up
+                // here only because of an OEM UsageStatsManager quirk (Vivo/Funtouch)
+                // replaying a stale/ghost event for an already-uninstalled app, sometimes
+                // even with a timestamp inside the current query window, so the earlier
+                // out-of-bounds-event filter alone doesn't catch every case. An uninstalled
+                // app cannot possibly have generated real usage, no matter what the event
+                // log says, so skip it outright instead of listing it with a blank icon.
+                continue
             } catch (e: Exception) {
-                // Ignore and use packageName as label
+                // Some other lookup failure (shouldn't normally happen) — keep the entry,
+                // just fall back to the raw package name as the label.
             }
 
             // Filter out system launchers and other packages that don't represent apps with launcher icons if needed.
