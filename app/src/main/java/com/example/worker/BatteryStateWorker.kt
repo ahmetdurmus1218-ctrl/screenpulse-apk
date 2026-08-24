@@ -7,7 +7,12 @@ import android.os.BatteryManager
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.ScreenPulseApplication
+import com.example.data.database.UsageHistoryEntity
 import kotlinx.coroutines.flow.first
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 /**
  * Runs periodically (every ~15 minutes, the platform-enforced minimum for periodic work)
@@ -68,6 +73,35 @@ class BatteryStateWorker(
             // closed) left a gap in battery_logs, and "Pil Tüketim Eğrisi" just drew a
             // straight interpolated line across it, skipping the real peak entirely.
             app.repository.logCurrentBatteryState()
+
+            // BUG FIX: today's row in usage_history (what the "Gün" bar chart reads) was
+            // only ever (re)written from ScreenPulseViewModel.loadData() -> i.e. only when
+            // the app was actually opened. If someone opened the app once early in the day
+            // and never again, that day's saved total froze at whatever it was at that one
+            // moment, understating the rest of the day's real usage — same root cause as
+            // the battery-logging gap above, just for the daily history table instead.
+            // This worker already runs every ~15 min unconditionally, so recomputing and
+            // upserting today's entry here keeps it fresh all day even if the app is never
+            // opened, exactly like logCurrentBatteryState() above does for battery_logs.
+            val now = System.currentTimeMillis()
+            val todayStart = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }.timeInMillis
+            val (dayScreenOn, dayScreenOff) = app.repository.getScreenOnOffFromEvents(todayStart, now)
+            val todayStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+            val batteryInfo = app.repository.getBatteryInfo()
+            app.repository.saveUsageHistory(
+                UsageHistoryEntity(
+                    date = todayStr,
+                    screenOnTimeMs = dayScreenOn,
+                    screenOffTimeMs = dayScreenOff,
+                    batteryUsedPct = batteryInfo.batteryUsedSinceCharge,
+                    totalTimeSinceChargeMs = (now - todayStart).coerceAtLeast(0L)
+                )
+            )
 
             // Refresh widgets here too — this worker already runs every ~15 min
             // regardless of the lock-screen notification feature's on/off state, so
